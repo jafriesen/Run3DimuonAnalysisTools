@@ -25,7 +25,7 @@ process.source = cms.Source("PoolSource",
 #process.gtStage2Digis.InputLabel = cms.InputTag( "hltFEDSelectorL1" )
 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("mmgParkingTreeWithPFCands.root")
+    fileName = cms.string("mmgTree.root")
 )
 
 #process.ScoutingFilterPath = cms.Path(process.scoutingFilter)
@@ -39,7 +39,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '124X_dataRun3_Prompt_v4', '')
 
 #L1Info = ["L1_DoubleMu4_SQ_OS_dR_Max1p2","L1_DoubleMu4p5_SQ_OS_dR_Max1p2","L1_DoubleMu3er2p0_SQ_OS_dR_Max1p4","L1_DoubleMu0er1p4_OQ_OS_dEta_Max1p6","L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6(5)","L1_DoubleMu0er1p5(4)_SQ_OS_dR_Max1p4"]
 L1Info = ["L1_DoubleMu3er2p0_SQ_OS_dR_Max1p4","L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6","L1_DoubleMu0er1p4_OQ_OS_dEta_Max1p6","L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5","L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4","L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4","L1_DoubleMu4p5_SQ_OS_dR_Max1p2","L1_DoubleMu4_SQ_OS_dR_Max1p2"]
-process.scoutingTree = cms.EDAnalyzer('MuMuGammaTreeMaker',
+process.tree = cms.EDAnalyzer('MuMuGammaTreeMaker',
                                       triggerresults   = cms.InputTag("TriggerResults", "", "HLT"),
                                       ReadPrescalesFromFile = cms.bool( False ),
                                       AlgInputTag       = cms.InputTag("gtStage2Digis"),
@@ -56,4 +56,4 @@ process.scoutingTree = cms.EDAnalyzer('MuMuGammaTreeMaker',
                                   )
 
 #process.p = cms.Path(process.gtStage2Digis+process.scoutingTree)
-process.p = cms.Path(process.parkingTree)
+process.p = cms.Path(process.tree)

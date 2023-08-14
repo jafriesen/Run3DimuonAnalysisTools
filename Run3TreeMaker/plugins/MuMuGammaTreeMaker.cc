@@ -282,7 +282,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
           tv = kvf.vertex(transient_tracks);
 
           if (!tv.isValid()) {
-            std::cout << "ij " << iMuon << jMuon << "Vertex not valid." << std::endl;
+            //std::cout << "ij " << iMuon << jMuon << "Vertex not valid." << std::endl;
           } else {
             vertex = reco::Vertex(tv);
             probVtx = TMath::Prob( vertex.chi2() , vertex.ndof() );
@@ -345,10 +345,10 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     pt=dimu.Pt();
     dr=mu1.DeltaR(mu2);
 
-    std::cout<<std::endl<<"pt: "<<pt1<<", "<<pt2<<std::endl;
-    std::cout<<"pfIso: "<<pfIso1<<", "<<pfIso2<<std::endl;
-    std::cout << "id1 " << (muonsH->at(idx[0])).isHighPtMuon(pv) << (muonsH->at(idx[0])).isLooseMuon() << (muonsH->at(idx[0])).isMediumMuon() << (muonsH->at(idx[0])).isSoftMuon(pv) << (muonsH->at(idx[0])).isTightMuon(pv) << std::endl;
-    std::cout << "id2 " << (muonsH->at(idx[1])).isHighPtMuon(pv) << (muonsH->at(idx[1])).isLooseMuon() << (muonsH->at(idx[1])).isMediumMuon() << (muonsH->at(idx[1])).isSoftMuon(pv) << (muonsH->at(idx[1])).isTightMuon(pv) << std::endl;
+    //std::cout<<std::endl<<"pt: "<<pt1<<", "<<pt2<<std::endl;
+    //std::cout<<"pfIso: "<<pfIso1<<", "<<pfIso2<<std::endl;
+    //std::cout << "id1 " << (muonsH->at(idx[0])).isHighPtMuon(pv) << (muonsH->at(idx[0])).isLooseMuon() << (muonsH->at(idx[0])).isMediumMuon() << (muonsH->at(idx[0])).isSoftMuon(pv) << (muonsH->at(idx[0])).isTightMuon(pv) << std::endl;
+    //std::cout << "id2 " << (muonsH->at(idx[1])).isHighPtMuon(pv) << (muonsH->at(idx[1])).isLooseMuon() << (muonsH->at(idx[1])).isMediumMuon() << (muonsH->at(idx[1])).isSoftMuon(pv) << (muonsH->at(idx[1])).isTightMuon(pv) << std::endl;
 
     muonID1.clear();
     muonID2.clear();
@@ -398,7 +398,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
 
     nPhotons = 0;
     for (auto photons_iter = photonsH->begin(); photons_iter != photonsH->end(); ++photons_iter) {
-      std::cout << "  slimmedPhotonPt " <<  photons_iter->pt() << " slimmedPhotonEta " << photons_iter->eta() << " slimmedPhotonPhi " << photons_iter->phi() << " isPFlowPhoton " << photons_iter->isPFlowPhoton() << std::endl;
+      //std::cout << "  slimmedPhotonPt " <<  photons_iter->pt() << " slimmedPhotonEta " << photons_iter->eta() << " slimmedPhotonPhi " << photons_iter->phi() << " isPFlowPhoton " << photons_iter->isPFlowPhoton() << std::endl;
       slimmedPhotonPt.push_back(photons_iter->pt());
       slimmedPhotonEta.push_back(photons_iter->eta());
       slimmedPhotonPhi.push_back(photons_iter->phi());

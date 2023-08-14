@@ -10,4 +10,9 @@
 <use name="L1Trigger/L1TGlobal"/>
 <use name="DataFormats/L1TGlobal"/>
 <use name="HLTrigger/HLTcore"/>
+<use name="TrackingTools/TransientTrack"/>
+<use name="TrackingTools/Records"/>
+<use name="DataFormats/TrackReco"/>
+<use name="RecoVertex/KalmanVertexFit"/>
+<use name="RecoVertex/VertexPrimitives"/>
 <flags EDM_PLUGIN="1"/>
