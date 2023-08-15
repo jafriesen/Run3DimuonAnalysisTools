@@ -41,7 +41,7 @@ def parseOptions():
     # input options
     parser.add_option('-i', '--input', dest='INPUT', type='string', help='input file')
     parser.add_option('-o', '--output', dest='OUTPUT', type='string', help='output file')
-    parser.add_option('-e', '--outdir', dest='OUTDIR', type='string', help='output directory'
+    parser.add_option('-e', '--outdir', dest='OUTDIR', type='string', help='output directory')
     parser.add_option('-t', '--taskname', dest='TASKNAME', type='string', help='task name')    
     parser.add_option('-s', '--scriptname', dest='SCRIPTNAME', type='string', help='script name')    
     parser.add_option('-n', '--njobs', dest='NJOBS', type=int, help='njobs')

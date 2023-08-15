@@ -28,6 +28,10 @@ def parseOptions():
 	parser.add_option('-o', '--output', dest='OUTPUT', type='string', help='output file')
 	parser.add_option('-n', '--njobs', dest='NJOBS', type=int, help='njobs')
 	parser.add_option('-j', '--job', dest='JOB', type=int, help='job')
+	parser.add_option('-r', '--run', dest='RUN', type='string', help='run2 or run3')
+	parser.add_option('-c', '--condition', dest='CONDITION', type='string', help='selection conditions')
+	parser.add_option('--min', dest='MIN', type=float, help='minimum Lxy', default=0)
+	parser.add_option('--max', dest='MAX', type=float, help='maximum Lxy', default=120)
 
 	# store options and arguments as global variables
 	global opt, args
@@ -49,7 +53,7 @@ def fillHistogram():
 	ROOT.gROOT.SetBatch()
 	print(opt.INPUT)
 
-	listDir = "/afs/cern.ch/user/j/jfriesen/CMSSW_12_4_2/src/Run3DimuonAnalysisTools"	
+	listDir = "/afs/cern.ch/user/j/jfriesen/CMSSW_12_4_2/src/Run3DimuonAnalysisTools/Plotting/FillHistogram"	
 	files = [ line for line in open(listDir+"/muMuGammaTree_ntuples.txt")]
 
 	N = len(files)
@@ -71,13 +75,13 @@ def fillHistogram():
 	eta_bins = 500
 
 	bin_width = 0.001
-	mmg_low = round(-15./bin_width)*bin_width
-	mmg_high = round(15./bin_width)*bin_width
+	mmg_low = round(0./bin_width)*bin_width
+	mmg_high = round(10./bin_width)*bin_width
 	mmg_bins = round((mmg_high - mmg_low)/bin_width)
 
 	photon_collections = ["slimmedPhotons","pfCandPhotons","pfCandPhotonsPtMax10","pfCandPhotonsPtMin10"]
-	selections = ["closestToEta","minDr","minDrEt2"]
-	plots = ["massMMG","massDimu","massDiff"]
+	selections = ["minDr"]					# ["closestToEta","minDr","minDrEt2"]
+	plots = ["massMMG","massDimu","massDiff","pt"]
 	cuts = ["all","isEta","isNotEta","massDimuMax0p528"]
 
 	config = {}
@@ -88,7 +92,12 @@ def fillHistogram():
 			for plot in plots :
 				config[collection][selection][plot] = {}
 				for cut in cuts :
-					config[collection][selection][plot][cut] = ROOT.TH1F(collection+"_"+selection+"_"+plot+"_"+cut,collection+"_"+selection+"_"+plot+"_"+cut,mmg_bins,mmg_low,mmg_high)
+					if plot == "massDiff" :
+						config[collection][selection][plot][cut] = ROOT.TH1F(collection+"_"+selection+"_"+plot+"_"+cut,collection+"_"+selection+"_"+plot+"_"+cut,2*mmg_bins,-mmg_high,mmg_high)
+					elif plot == "pt" :
+						config[collection][selection][plot][cut] = ROOT.TH1F(collection+"_"+selection+"_"+plot+"_"+cut,collection+"_"+selection+"_"+plot+"_"+cut,2000,-100,100)
+					else :
+						config[collection][selection][plot][cut] = ROOT.TH1F(collection+"_"+selection+"_"+plot+"_"+cut,collection+"_"+selection+"_"+plot+"_"+cut,mmg_bins,mmg_low,mmg_high)
 			config[collection][selection]["best value"] = -1
 			config[collection][selection]["best photon"] = -1
 
@@ -170,6 +179,8 @@ def fillHistogram():
 					if(mass_mmg > 0.5 and mass_mmg < 0.6) :
 						config[collection][selection]["massDimu"][cut].Fill(mass_dimu)
 						config[collection][selection]["massDiff"][cut].Fill(abs(mass_mmg - ETA_MASS) - abs(mass_dimu - ETA_MASS))
+					if(mass_mmg > 0.0 and mass_mmg < 2.0) :
+						config[collection][selection]["pt"][cut].Fill(gamma.Pt())
 
 
 	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")

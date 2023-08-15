@@ -136,6 +136,15 @@ private:
   float phi1;
   float phi2;
 
+  float dxy1;
+  float dxy2;
+  float dz1;
+  float dz2;
+  float trkChi21;
+  float trkChi22;
+  float trkNdof1;
+  float trkNdof2;
+
   float probVtx;
   float vtxX;
   float vtxY;
@@ -333,6 +342,17 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     eta2=muonsH->at(idx[1]).eta();
     phi1=muonsH->at(idx[0]).phi();
     phi2=muonsH->at(idx[1]).phi();
+
+    dxy1 = muonsH->at(idx[0]).muonBestTrack()->dxy();
+    dxy2 = muonsH->at(idx[1]).muonBestTrack()->dxy();
+    dz1 = muonsH->at(idx[0]).muonBestTrack()->dz();
+    dz2 = muonsH->at(idx[1]).muonBestTrack()->dz();
+    trkChi21 = muonsH->at(idx[0]).muonBestTrack()->chi2();
+    trkChi22 = muonsH->at(idx[1]).muonBestTrack()->chi2();
+    trkNdof1 = muonsH->at(idx[0]).muonBestTrack()->ndof();
+    trkNdof2 = muonsH->at(idx[1]).muonBestTrack()->ndof();
+
+    //std::cout<<dxy1<<" "<<dz1<<" "<<trkChi21<<" "<<trkNdof1<<std::endl;
     
     TLorentzVector mu1;
     mu1.SetPtEtaPhiM(pt1,eta1,phi1,0.105658);
@@ -480,6 +500,16 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("phi2"                , &phi2                        , "phi2/F"    );
     tree->Branch("pfIso1"              , &pfIso1                      , "pfIso1/F"  );
     tree->Branch("pfIso2"              , &pfIso2                      , "pfIso2/F"  );
+
+    tree->Branch("dxy1"              , &dxy1                      , "dxy1/F"  );
+    tree->Branch("dxy2"              , &dxy2                      , "dxy2/F"  );
+    tree->Branch("dz1"              , &dz1                      , "dz1/F"  );
+    tree->Branch("dz2"              , &dz2                      , "dz2/F"  );
+    tree->Branch("trkChi21"              , &trkChi21                      , "trkChi21/F"  );
+    tree->Branch("trkChi22"              , &trkChi22                      , "trkChi22/F"  );
+    tree->Branch("trkNdof1"              , &trkNdof1                      , "trkNdof1/F"  );
+    tree->Branch("trkNdof2"              , &trkNdof2                      , "trkNdof2/F"  );
+
     //tree->Branch("rho"                 , &rho                         , "rho/F"     );
 
     tree->Branch("probVtx"            , &probVtx                      , "probVtx/F"  );
