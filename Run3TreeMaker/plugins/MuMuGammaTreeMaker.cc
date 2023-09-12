@@ -274,7 +274,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
   edm::ESHandle<TransientTrackBuilder> theB = iSetup.getHandle(esToken);
   KalmanVertexFitter kvf(true);
   TransientVertex tv;
-  probVtx = 0;
   float bestProbVtx = 0.005; // loose minimum probability as in dimuon HLT path
 
   reco::Vertex vertex;
@@ -294,12 +293,13 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             //std::cout << "ij " << iMuon << jMuon << "Vertex not valid." << std::endl;
           } else {
             vertex = reco::Vertex(tv);
-            probVtx = TMath::Prob( vertex.chi2() , vertex.ndof() );
+            float vertexProb = TMath::Prob( vertex.chi2() , vertex.ndof() );
 
-            if (probVtx > bestProbVtx) {
+            if (vertexProb > bestProbVtx) {
               fillTree = true;
               idx[0] = iMuon;
               idx[1] = jMuon;
+              bestProbVtx = vertexProb;
             }
 
             //vtxX = vertex.x();
@@ -321,7 +321,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
   //}
 
   if (fillTree) {
-
     eventNum = iEvent.id().event();
     lumiSec = iEvent.luminosityBlock();
     runNum = iEvent.id().run();
@@ -396,6 +395,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     vtxXError = vertex.xError();
     vtxYError = vertex.yError();
     vtxZError = vertex.zError();
+    probVtx = bestProbVtx;
 
     //Handle<double> rhoH;
     //iEvent.getByToken(rhoToken, rhoH);
