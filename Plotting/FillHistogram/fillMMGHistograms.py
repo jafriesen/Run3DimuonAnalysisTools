@@ -79,15 +79,23 @@ def fillHistogram():
 	mmg_high = round(10./bin_width)*bin_width
 	mmg_bins = round((mmg_high - mmg_low)/bin_width)
 
-	photon_collections = ["slimmedPhotons","pfCandPhotons","pfCandPhotonsPtMax10","pfCandPhotonsPtMin10"]
-	selections = ["closestToEta","minDr","minDrEt2"]
-	plots = ["massMMG","massDimu","massDiff","pt"]
-	cuts = ["all","isEta","isNotEta","massDimuMax0p528"]
+	#photon_collections = ["slimmedPhotons","pfCandPhotons","pfCandPhotonsPtMax10","pfCandPhotonsPtMin10"]
+	#selections = ["closestToEta","minDr","minDrEt2"]
+	#plots = ["massMMG","massDimu","massDiff","pt"]
+	#cuts = ["all","isEta","isNotEta","massDimuMax0p528"]
 
-	photon_collections = ["slimmedPhotons","pfCandPhotons","pfCandPhotonsPtMin10"]
-	selections = ["minDr","minDrEt2"]
-	plots = ["massMMG","massDimu_massMMG0p5to0p6","massDiff_massMMG0p5to0p6","pt_massMMG0p5to0p6","probVtx_massMMG0p5to0p6","massDiff_massMMG0to2","pt_massMMG0to2","probVtx_massMMG0to2"]
-	cuts = ["all","isNotEta","massDimuMax0p528","massDimu0p528to0p568"]
+	#photon_collections = ["slimmedPhotons","pfCandPhotons","pfCandPhotonsPtMin10"]
+	#selections = ["minDr","minDrEt2"]
+	#plots = ["massMMG","massDimu_massMMG0p5to0p6","massDiff_massMMG0p5to0p6","pt_massMMG0p5to0p6","probVtx_massMMG0p5to0p6","massDiff_massMMG0to2","pt_massMMG0to2","probVtx_massMMG0to2"]
+	#cuts = ["all","isNotEta","massDimuMax0p528","massDimu0p528to0p568"]
+
+	photon_collections = ["pfCandPhotons"]
+	selections = ["minDr"]
+	plots = ["massMMG","massDimu","massDimu_massMMG0p5to0p6"]
+	cuts = ["all","isEta"]
+
+	verbose = False
+	anyMassMMG = True
 
 	config = {}
 	for collection in photon_collections :
@@ -97,6 +105,7 @@ def fillHistogram():
 			for plot in plots :
 				config[collection][selection][plot] = {}
 				for cut in cuts :
+					if verbose : print("	"+collection+"_"+selection+"_"+plot+"_"+cut)
 					if plot == "massDiff" :
 						config[collection][selection][plot][cut] = ROOT.TH1F(collection+"_"+selection+"_"+plot+"_"+cut,collection+"_"+selection+"_"+plot+"_"+cut,2*mmg_bins,-mmg_high,mmg_high)
 					elif plot == "pt_massMMG0to2" or plot == "pt_massMMG0p5to0p6" :
@@ -112,9 +121,6 @@ def fillHistogram():
 
 	rand = ROOT.TRandom()
 
-	verbose = False
-	anyMassMMG = True
-
 	i_event = 0
 	for ev in t_scoutMuon :
 
@@ -129,44 +135,48 @@ def fillHistogram():
 		mass_dimu = dimu.M()
 		if (verbose) : print("mass_dimu",mass_dimu)
 
-		if (verbose) : print("slimmedPhotons")
-		for i_photon in range(len(ev.slimmedPhotonPt)) :
-			#print("	photon",i_photon)
-			collection = "slimmedPhotons"
-			gamma = ROOT.Math.PtEtaPhiMVector(ev.slimmedPhotonPt[i_photon], ev.slimmedPhotonEta[i_photon], ev.slimmedPhotonPhi[i_photon], 0)
-			mass_mmg = (dimu + gamma).M()
-			dr = abs(ROOT.Math.VectorUtil.DeltaR(dimu, gamma))
-			if (verbose) : print("	photon massMMG", mass_mmg)
-			for selection in selections :
-				if (verbose) : print("		selection",selection)
-				if selection == "closestToEta" : value = abs(mass_mmg - ETA_MASS)
-				if selection == "minDr" : value = dr
-				if selection == "minDrEt2" : value = dr / (ev.slimmedPhotonPt[i_photon] ** 2)
-				if config[collection][selection]["best value"] == -1 or value < config[collection][selection]["best value"] :
-					if (verbose) : print("			best value",value,i_photon,collection,selection)
-					config[collection][selection]["best value"] = value
-					config[collection][selection]["best photon"] = i_photon
-
-		if (verbose) : print("pfCandPhotons")
-		for i_photon in range(len(ev.pfCandPhotonPt)) :
-			#print("	photon",i_photon)
-			gamma = ROOT.Math.PtEtaPhiMVector(ev.pfCandPhotonPt[i_photon], ev.pfCandPhotonEta[i_photon], ev.pfCandPhotonPhi[i_photon], 0)
-			mass_mmg = (dimu + gamma).M()
-			dr = abs(ROOT.Math.VectorUtil.DeltaR(dimu, gamma))
-			if (verbose) : print("	photon massMMG", mass_mmg)
-			for collection in photon_collections[1:] :
-				if (verbose) : print("		collection", collection)
-				if collection == "pfCandPhotonsPtMax10" and ev.pfCandPhotonPt[i_photon] > 10 : continue
-				if collection == "pfCandPhotonsPtMin10" and ev.pfCandPhotonPt[i_photon] < 10 : continue
+		
+		if "slimmedPhotons" in photon_collections :
+			if (verbose) : print("slimmedPhotons")
+			for i_photon in range(len(ev.slimmedPhotonPt)) :
+				#print("	photon",i_photon)
+				collection = "slimmedPhotons"
+				gamma = ROOT.Math.PtEtaPhiMVector(ev.slimmedPhotonPt[i_photon], ev.slimmedPhotonEta[i_photon], ev.slimmedPhotonPhi[i_photon], 0)
+				mass_mmg = (dimu + gamma).M()
+				dr = abs(ROOT.Math.VectorUtil.DeltaR(dimu, gamma))
+				if (verbose) : print("	photon massMMG", mass_mmg)
 				for selection in selections :
-					if (verbose) : print("			selection", selection)
+					if (verbose) : print("		selection", selection, "value", value)
 					if selection == "closestToEta" : value = abs(mass_mmg - ETA_MASS)
 					if selection == "minDr" : value = dr
-					if selection == "minDrEt2" : value = dr / ev.pfCandPhotonEt2[i_photon]
+					if selection == "minDrEt2" : value = dr / (ev.slimmedPhotonPt[i_photon] ** 2)
 					if config[collection][selection]["best value"] == -1 or value < config[collection][selection]["best value"] :
-						if (verbose) : print("				best value",value,i_photon,collection,selection)
+						if (verbose) : print("			best value",value,i_photon,collection,selection)
 						config[collection][selection]["best value"] = value
 						config[collection][selection]["best photon"] = i_photon
+
+		if "pfCandPhotons" in photon_collections :
+			if (verbose) : print("pfCandPhotons")
+			for i_photon in range(len(ev.pfCandPhotonPt)) :
+				#print("	photon",i_photon)
+				gamma = ROOT.Math.PtEtaPhiMVector(ev.pfCandPhotonPt[i_photon], ev.pfCandPhotonEta[i_photon], ev.pfCandPhotonPhi[i_photon], 0)
+				mass_mmg = (dimu + gamma).M()
+				dr = abs(ROOT.Math.VectorUtil.DeltaR(dimu, gamma))
+				if (verbose) : print("	photon massMMG", mass_mmg)
+				for collection in photon_collections :
+					if collection == "slimmedPhotons" : continue
+					if (verbose) : print("		collection", collection)
+					if collection == "pfCandPhotonsPtMax10" and ev.pfCandPhotonPt[i_photon] > 10 : continue
+					if collection == "pfCandPhotonsPtMin10" and ev.pfCandPhotonPt[i_photon] < 10 : continue
+					for selection in selections :
+						if selection == "closestToEta" : value = abs(mass_mmg - ETA_MASS)
+						if selection == "minDr" : value = dr
+						if selection == "minDrEt2" : value = dr / ev.pfCandPhotonEt2[i_photon]
+						if (verbose) : print("			selection", selection, "value", value, "best value", config[collection][selection]["best value"])
+						if config[collection][selection]["best value"] == -1 or value < config[collection][selection]["best value"] :
+							if (verbose) : print("				best value",value,i_photon,collection,selection)
+							config[collection][selection]["best value"] = value
+							config[collection][selection]["best photon"] = i_photon
 
 
 		for collection in photon_collections : 
@@ -186,19 +196,20 @@ def fillHistogram():
 					if cut == "massDimuMax0p528" and mass_dimu > 0.528 : continue
 					if cut == "massDimu0p528to0p568" and ( mass_dimu < 0.528 or mass_dimu > 0.568 ) : continue
 					config[collection][selection]["massMMG"][cut].Fill(mass_mmg)
+					config[collection][selection]["massDimu"][cut].Fill(mass_dimu)
 					if(mass_mmg > 0.5 and mass_mmg < 0.6) :
 						config[collection][selection]["massDimu_massMMG0p5to0p6"][cut].Fill(mass_dimu)
-						config[collection][selection]["massDiff_massMMG0p5to0p6"][cut].Fill(abs(mass_mmg - ETA_MASS) - abs(mass_dimu - ETA_MASS))
-						config[collection][selection]["pt_massMMG0p5to0p6"][cut].Fill(gamma.Pt())
+						#config[collection][selection]["massDiff_massMMG0p5to0p6"][cut].Fill(abs(mass_mmg - ETA_MASS) - abs(mass_dimu - ETA_MASS))
+						#config[collection][selection]["pt_massMMG0p5to0p6"][cut].Fill(gamma.Pt())
 						#config[collection][selection]["eta_massMMG0p5to0p6"][cut].Fill(gamma.Eta())
 						#config[collection][selection]["phi_massMMG0p5to0p6"][cut].Fill(gamma.Phi())
-						config[collection][selection]["probVtx_massMMG0p5to0p6"][cut].Fill(ev.probVtx)
-					if(mass_mmg > 0.0 and mass_mmg < 2.0) :
-						config[collection][selection]["massDiff_massMMG0to2"][cut].Fill(abs(mass_mmg - ETA_MASS) - abs(mass_dimu - ETA_MASS))
-						config[collection][selection]["pt_massMMG0to2"][cut].Fill(gamma.Pt())
+						#config[collection][selection]["probVtx_massMMG0p5to0p6"][cut].Fill(ev.probVtx)
+					#if(mass_mmg > 0.0 and mass_mmg < 2.0) :
+						#config[collection][selection]["massDiff_massMMG0to2"][cut].Fill(abs(mass_mmg - ETA_MASS) - abs(mass_dimu - ETA_MASS))
+						#config[collection][selection]["pt_massMMG0to2"][cut].Fill(gamma.Pt())
 						#config[collection][selection]["eta_massMMG0to2"][cut].Fill(gamma.Eta())
 						#config[collection][selection]["phi_massMMG0to2"][cut].Fill(gamma.Phi())
-						config[collection][selection]["probVtx_massMMG0to2"][cut].Fill(ev.probVtx)
+						#config[collection][selection]["probVtx_massMMG0to2"][cut].Fill(ev.probVtx)
 
 
 	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")
