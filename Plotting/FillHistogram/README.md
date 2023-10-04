@@ -26,9 +26,9 @@ files = [ "root://cmsxrootd.fnal.gov/"+line for line in open(listDir+"/muMuGamma
 These commands submit 2000 jobs running `fillMMGHistograms.py` on the ntuples listed in `muMuGammaTree_ntuples.txt`:
 ```
 mkdir /eos/user/.../histos_etaToMuMuGamma_mass_minDr
-python3 submitFillHistogram.py -o h_mass -e /eos/user/.../histos_etaToMuMuGamma_mass_minDr -t histos_etaToMuMuGamma_mass_minDr -n 2000 -s /afs/cern.ch/user/.../CMSSW_12_4_2/src/Run3DimuonAnalysisTools/Plotting/FillHistogram/fillMMGHistograms.py
+python3 submitFillHistogram.py -o h_misc -e /eos/user/.../histos_etaToMuMuGamma_mass_minDr -t histos_etaToMuMuGamma_mass_minDr -n 2000 -s fillMMGHistograms.py -l muMuGammaTree_ntuples.txt
 ```
-`/eos/user/.../histos_etaToMuMuGamma_mass_minDr` is the output directory. The submission may not work without specifying full paths as inputs.
+`/eos/user/.../histos_etaToMuMuGamma_mass_minDr` is the output directory.
 
 Add `-d` to set up a dry run or check that the script works by running a single job locally (out of 5000 here to limit the number of input files):
 ```
