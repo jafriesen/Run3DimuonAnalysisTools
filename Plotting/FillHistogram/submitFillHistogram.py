@@ -46,6 +46,7 @@ def parseOptions():
     parser.add_option('-s', '--scriptname', dest='SCRIPTNAME', type='string', help='script name')    
     parser.add_option('-n', '--njobs', dest='NJOBS', type=int, help='njobs')
     parser.add_option('-d', '--dryrun', dest='DRY', action='store_true', help='dry run only')
+    parser.add_option('-l', '--list', dest='LIST', help='ntuple list', default="")
 
     # store options and arguments as global variables
     global opt, args
@@ -78,7 +79,7 @@ def submitFillHistogram():
   outscriptname = 'condor_%s.sh' % opt.TASKNAME
   subfilename = 'condor_%s.sub' % opt.TASKNAME
   print('>> condor job script will be %s' % outscriptname)
-  
+
   outscript = open(outscriptname, "w")
   job_settings = JOB_PREFIX % {
       'CMSSW_BASE': os.environ['CMSSW_BASE'],
@@ -86,9 +87,15 @@ def submitFillHistogram():
       'SCRIPTNAME': opt.SCRIPTNAME
       }
   outscript.write(job_settings)
+
+  if opt.LIST != "" :
+      listname = startdir+"/"+opt.LIST
+
   for i in range(1, opt.NJOBS+1):
     outscript.write('\nif [ $1 -eq %i ]; then\n' % i)
-    line = "python3 "+str(opt.SCRIPTNAME)+" -i "+str(opt.INPUT)+" -o "+str(opt.OUTPUT)+" -n "+str(opt.NJOBS)+" -j "+str(i)
+    line = "python3 "+startdir+"/"+str(opt.SCRIPTNAME)+" -i "+str(opt.INPUT)+" -o "+str(opt.OUTPUT)+" -n "+str(opt.NJOBS)+" -j "+str(i)
+    if opt.LIST != "" :
+      line += " -l "+str(startdir)+"/"+str(opt.LIST)
     outscript.write('  ' + line + '\n')
     outscript.write('fi \n')
   line = "cp "+opt.OUTPUT+"* "+opt.OUTDIR

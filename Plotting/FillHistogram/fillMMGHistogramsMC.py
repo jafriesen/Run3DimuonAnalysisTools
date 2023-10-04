@@ -50,21 +50,18 @@ def fillHistogram():
 	ROOT.gROOT.SetBatch()
 	print(opt.INPUT)
 
-	files = [ "root://cmsxrootd.fnal.gov/"+line for line in open(str(opt.LIST))]
-
-	N = len(files)
-
-	first = int(float(N)/float(opt.NJOBS)*float(opt.JOB-1))
-	last = int(float(N)/float(opt.NJOBS)*float(opt.JOB))
-
-	print(first, last)
+	inputs = [
+		["",""],
+		["pt5to65", "/eos/user/j/jfriesen/CRAB_UserFiles/skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to65/230921_174405/0000/mmgTree*"],
+		["pt5to65", "/eos/user/j/jfriesen/CRAB_UserFiles/skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to65/230921_174405/0001/mmgTree*"],
+		["pt5to25", "/eos/user/j/jfriesen/CRAB_UserFiles/skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to25/230921_174611/0000/mmgTree*"],
+		["pt5to25", "/eos/user/j/jfriesen/CRAB_UserFiles/skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to25/230921_174611/0001/mmgTree*"],
+		["pt5to25", "/eos/user/j/jfriesen/CRAB_UserFiles/skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to25/230921_174611/0002/mmgTree*"],
+		["pt5to25", "/eos/user/j/jfriesen/CRAB_UserFiles/skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to25/230921_174611/0003/mmgTree*"],
+	]
 
 	t_scoutMuon = TChain("tree/tree")
-	for i in range(len(files)):
-		if (i<first or i>=last): continue
-		print(files[i])
-		t_scoutMuon.Add(files[i])
-		print(t_scoutMuon.GetEntries())
+	t_scoutMuon.Add(inputs[opt.JOB][1])
 
 	eta_low = 0
 	eta_high = 1
@@ -75,7 +72,6 @@ def fillHistogram():
 	mmg_high = round(10./bin_width)*bin_width
 	mmg_bins = round((mmg_high - mmg_low)/bin_width)
 
-	'''
 	photon_collections = ["slimmedPhotons","pfCandPhotons","pfCandPhotonsPtMax10","pfCandPhotonsPtMin10"]
 	selections = ["closestToEta","minDr","minDrEt2"]
 	plots = ["massMMG","massDimu","massDiff","pt"]
@@ -88,18 +84,12 @@ def fillHistogram():
 
 	photon_collections = ["slimmedPhotons","pfCandPhotons","slimmedOrPfCandPhotons"]
 	selections = ["minDr"]
-	plots = ["massMMG","massDimu","massDimu_massMMG0p503to0p571","photonPt","deltaPt"]
-	cuts = ["all","isEta"]
-	'''
-
-	photon_collections = ["slimmedPhotons","pfCandPhotons","slimmedOrPfCandPhotons"]
-	selections = ["minDr"]
-	plots = ["massMMG","massDimu","massDimu_massMMG0p503to0p571"]
+	plots = ["massMMG","massDimu","massDimu_massMMG0p5to0p6","photonPt","deltaPt","probVtx"]
 	cuts = ["all","isEta"]
 
 	verbose = False
 	anyMassMMG = True
-	vtxCut = True
+	vtxCut = False
 
 	config = {}
 	for collection in photon_collections :
@@ -216,8 +206,9 @@ def fillHistogram():
 					config[collection][selection]["massDimu"][cut].Fill(mass_dimu)
 					if "photonPt" in plots : config[collection][selection]["photonPt"][cut].Fill(gamma.Pt())
 					if "deltaPt" in plots : config[collection][selection]["deltaPt"][cut].Fill(abs(dimu.Pt()-gamma.Pt()))
-					if(mass_mmg > 0.503 and mass_mmg < 0.571) :
-						config[collection][selection]["massDimu_massMMG0p503to0p571"][cut].Fill(mass_dimu)
+					if "probVtx" in plots : config[collection][selection]["probVtx"][cut].Fill(ev.probVtx)
+					if(mass_mmg > 0.5 and mass_mmg < 0.6) :
+						config[collection][selection]["massDimu_massMMG0p5to0p6"][cut].Fill(mass_dimu)
 						#config[collection][selection]["massDiff_massMMG0p5to0p6"][cut].Fill(abs(mass_mmg - ETA_MASS) - abs(mass_dimu - ETA_MASS))
 						#config[collection][selection]["pt_massMMG0p5to0p6"][cut].Fill(gamma.Pt())
 						#config[collection][selection]["eta_massMMG0p5to0p6"][cut].Fill(gamma.Eta())
@@ -231,8 +222,8 @@ def fillHistogram():
 						#config[collection][selection]["probVtx_massMMG0to2"][cut].Fill(ev.probVtx)
 
 
-	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")
-	outfile = ROOT.TFile(str(opt.OUTPUT)+str(opt.JOB)+".root", "recreate")
+	print("saving as "+str(opt.OUTPUT)+inputs[opt.JOB][0]+"_"+str(opt.JOB)+".root")
+	outfile = ROOT.TFile(str(opt.OUTPUT)+inputs[opt.JOB][0]+"_"+str(opt.JOB)+".root", "recreate")
 
 	for collection in photon_collections :
 		for selection in selections :
@@ -246,3 +237,7 @@ def fillHistogram():
 
 if __name__ == "__main__":
 	fillHistogram()
+
+
+
+	
