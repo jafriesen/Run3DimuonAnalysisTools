@@ -84,7 +84,7 @@ def submitFillHistogram():
   job_settings = JOB_PREFIX % {
       'CMSSW_BASE': os.environ['CMSSW_BASE'],
       'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
-      'SCRIPTNAME': opt.SCRIPTNAME
+      'SCRIPTNAME': startdir+"/"+str(opt.SCRIPTNAME)
       }
   outscript.write(job_settings)
 
@@ -108,7 +108,7 @@ def submitFillHistogram():
   condor_settings = CONDOR_TEMPLATE % {
       'EXE': outscriptname,
       'TASK': opt.TASKNAME,
-      'SCRIPTNAME': opt.SCRIPTNAME,
+      'SCRIPTNAME': startdir+"/"+str(opt.SCRIPTNAME),
       'NUMBER': opt.NJOBS
       }
 
