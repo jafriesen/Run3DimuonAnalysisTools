@@ -483,19 +483,8 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     Handle<TriggerResults> triggerResultsH;
     iEvent.getByToken(triggerResultsToken, triggerResultsH);
     hltResult_.clear();
-    HLTConfigProvider hltConfig;
-    bool changedConfig = false;
-    hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changedConfig);    
-	for(size_t j = 0; j < hltConfig.triggerNames().size(); j++){
-        std::string pathName = hltConfig.triggerNames()[j];        
-        std::cout<<"analyze pathName "<<pathName<<" "<<triggerResultsH->accept(j)<<std::endl;
-    }
-
-    std::cout<<"triggerPathsVector.size() "<<triggerPathsVector.size()<<std::endl;
     for (size_t i = 0; i < triggerPathsVector.size(); i++) {
         hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
-        std::cout<<"triggerPathsVector[i] "<<triggerPathsVector[i]<<" "<<triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])<<std::endl;
-
 	}
 
     //std::cout<<"tree filling with mass: "<<mass<<", pt: "<<pt<<std::endl;
@@ -584,8 +573,6 @@ void MuMuGammaTreeMaker::endJob() {
 }
 
 void MuMuGammaTreeMaker::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
-    std::cout<<"beginRun "<<std::endl;
-
     // HLT paths
     triggerPathsVector.push_back("HLT_DoubleMu4_3_LowMass_v*");
     triggerPathsVector.push_back("HLT_DoubleMu4_LowMass_Displaced_v*");
@@ -602,7 +589,6 @@ void MuMuGammaTreeMaker::beginRun(edm::Run const& iRun, edm::EventSetup const& i
         TPRegexp pattern(triggerPathsVector[i]);
         for(size_t j = 0; j < hltConfig.triggerNames().size(); j++){
             std::string pathName = hltConfig.triggerNames()[j];
-            std::cout<<"beginRun pathName "<<pathName<<" "<<TString(pathName).Contains(pattern)<<std::endl;
             if(TString(pathName).Contains(pattern)){
                 triggerPathsMap[triggerPathsVector[i]] = j;
             }
