@@ -16,6 +16,7 @@
 #include <TTree.h>
 #include <TLorentzVector.h>
 #include "TMath.h"
+#include <TPRegexp.h>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -76,7 +77,7 @@
 // from  edm::one::EDAnalyzer<>
 // This will improve performance in multithreaded jobs.
 
-class MuMuGammaTreeMaker : public edm::one::EDAnalyzer<edm::one::SharedResources> {
+class MuMuGammaTreeMaker : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns, edm::one::WatchLuminosityBlocks> {
 public:
   explicit MuMuGammaTreeMaker(const edm::ParameterSet&);
   ~MuMuGammaTreeMaker() override;
@@ -84,11 +85,14 @@ public:
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 private:
-  void beginJob() override;
-  void analyze(const edm::Event&, const edm::EventSetup&) override;
-  void endJob() override;
-    //void beginRun(edm::Run const&, edm::EventSetup const&) override;
-  //void endRun(edm::Run const&, edm::EventSetup const&) override;
+  virtual void beginJob() override;
+  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+  virtual void endJob() override;
+  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
+  virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
+  virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+  virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+    
   //void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
   //void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;   
 
@@ -115,6 +119,7 @@ private:
   std::unique_ptr<l1t::L1TGlobalUtil> l1GtUtils_;
   std::vector<std::string>     l1Seeds_;
   std::vector<bool>            l1Result_;
+  std::vector<bool>            hltResult_;
 
   TTree* tree;
 
@@ -475,6 +480,13 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
         }
     }
 
+    Handle<TriggerResults> triggerResultsH;
+    iEvent.getByToken(triggerResultsToken, triggerResultsH);
+    hltResult_.clear();
+    for (size_t i = 0; i < triggerPathsVector.size(); i++) {
+        hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
+	}
+
     //std::cout<<"tree filling with mass: "<<mass<<", pt: "<<pt<<std::endl;
     tree->Fill();
   }
@@ -530,6 +542,7 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("muonID2", "std::vector<bool>", &muonID2, 32000, 0);
 
     tree->Branch("l1Result", "std::vector<bool>"             ,&l1Result_, 32000, 0  );
+    tree->Branch("hltResult", "std::vector<bool>"             ,&hltResult_, 32000, 0  );
 
     tree->Branch("nPhotons"               , &nPhotons                       , "nPhotons/I"   );
 
@@ -557,6 +570,39 @@ void MuMuGammaTreeMaker::beginJob() {
 // ------------ method called once each job just after ending the event loop  ------------
 void MuMuGammaTreeMaker::endJob() {
   // please remove this method if not needed
+}
+
+void MuMuGammaTreeMaker::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
+    // HLT paths
+    triggerPathsVector.push_back("HLT_DoubleMu4_3_LowMass_v*");
+    triggerPathsVector.push_back("HLT_DoubleMu4_LowMass_Displaced_v*");
+
+    HLTConfigProvider hltConfig;
+    bool changedConfig = false;
+    hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changedConfig);
+
+    for (size_t i = 0; i < triggerPathsVector.size(); i++) {
+        triggerPathsMap[triggerPathsVector[i]] = -1;
+    }
+
+    for(size_t i = 0; i < triggerPathsVector.size(); i++){
+        TPRegexp pattern(triggerPathsVector[i]);
+        for(size_t j = 0; j < hltConfig.triggerNames().size(); j++){
+            std::string pathName = hltConfig.triggerNames()[j];
+            if(TString(pathName).Contains(pattern)){
+                triggerPathsMap[triggerPathsVector[i]] = j;
+            }
+        }
+    }
+}
+
+void MuMuGammaTreeMaker::endRun(edm::Run const&, edm::EventSetup const&) {
+}
+
+void MuMuGammaTreeMaker::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const&) {
+}
+
+void MuMuGammaTreeMaker::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
