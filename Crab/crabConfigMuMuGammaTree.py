@@ -21,17 +21,17 @@ if __name__ == '__main__':
     from CRABAPI.RawCommand import crabCommand
 
     datasets = [
-        '/ParkingDoubleMuonLowMass0/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass1/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass2/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass3/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass4/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass5/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass6/Run2022F-PromptReco-v1/MINIAOD',
-        '/ParkingDoubleMuonLowMass7/Run2022F-PromptReco-v1/MINIAOD'
+        '/ParkingDoubleMuonLowMass0/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass1/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass2/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass3/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass4/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass5/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass6/Run2022G-PromptReco-v1/MINIAOD',
+        '/ParkingDoubleMuonLowMass7/Run2022G-PromptReco-v1/MINIAOD',
     ]
     
     for dataset in datasets:
         config.Data.inputDataset = dataset
-        config.General.requestName = "muMuGamma_15Aug2023_" + dataset.split('/')[1]
+        config.General.requestName = "muMuGamma_3Oct2023_" + dataset.split('/')[1] + "_" + dataset.split('/')[2]
         crabCommand('submit', config = config)
