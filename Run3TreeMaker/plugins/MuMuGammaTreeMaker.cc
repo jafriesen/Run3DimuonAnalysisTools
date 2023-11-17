@@ -524,48 +524,39 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
         hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
 	}
 
-    /*
-    motherID1=0;
-    motherID2=0;
     if (doGEN) {
+
         Handle<vector<reco::GenParticle> > prunedGenParticles;
         iEvent.getByToken(prunedGenToken, prunedGenParticles);
-        float bestdR1 = 0.5; float bestdR2=0.5;
-        for (auto genp = prunedGenParticles->begin(); genp != prunedGenParticles->end(); ++genp) {            
-            if (genp->status()==1 && abs(genp->pdgId())==13) {
 
-                std::cout<<"genp id: "<<genp->pdgId()<<" pt: "<<genp->pt()<<" eta: "<<genp->eta()<<" phi: "<<genp->phi();
-                if (genp->numberOfMothers()>0) {
-                    for (int i=0; i<(int)genp->numberOfMothers(); ++i) {
-                        std::cout<<" mother "<<i<<" "<<genp->mother()->pdgId();
-                    }
-                }                        
-                std::cout<<std::endl;
-
-                float dR1 = reco::deltaR(genp->p4(),muonsH->at(idx[0]).p4());
-                if (dR1<bestdR1) {
-                    bestdR1=dR1;
-                    motherID1= genp->numberOfMothers()>0 ? genp->mother()->pdgId() : genp->pdgId();
-                }
-                float dR2 = reco::deltaR(genp->p4(),muonsH->at(idx[1]).p4());
-                if (dR2<bestdR2) {
-                    bestdR2=dR2;
-                    motherID2= genp->numberOfMothers()>0 ? genp->mother()->pdgId() : genp->pdgId();
-                }
-            }
-
-            if (genp->pdgId()==221 && genp->numberOfDaughters()==3 && genp->status()==2)
-            {
-                std::cout<<"eta mu mu gamma!"<<std::endl;
-            }
-        }
-        std::cout<<"motherID1: "<<motherID1<<" motherID2: "<<motherID2<<std::endl;
-            
         Handle<vector<pat::PackedGenParticle> > packedGenParticles;
         iEvent.getByToken(packedGenToken, packedGenParticles);
 
+        for (auto genp = prunedGenParticles->begin(); genp != prunedGenParticles->end(); ++genp) {            
+            if (abs(genp->pdgId())==221 or abs(genp->pdgId())==113 or abs(genp->pdgId())==223 or abs(genp->pdgId())==331 or abs(genp->pdgId()==333)) {
+                std::cout<<"genp id: "<<genp->pdgId()<<" pt: "<<genp->pt()<<" eta: "<<genp->eta()<<" status: "<<genp->status();
+                if (genp->numberOfDaughters()>0) {
+                    int daughterMuons=0;
+                    for (int i=0; i<(int)genp->numberOfDaughters(); ++i) {
+                        std::cout<<" daughter "<<i<<" "<<genp->daughter(i)->pdgId();
+                        if (abs(genp->daughter(i)->pdgId())==13) daughterMuons+=1;
+                    }
+                    if (daughterMuons==2) {
+                        //check for photons
+                        for (auto pgp = packedGenParticles->begin(); pgp != packedGenParticles->end(); ++pgp) {
+                            if (pgp->pdgId()==22 and pgp->motherRef()->pdgId()==genp->pdgId()) {
+                                std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt();
+                            }
+                        }
+                    }
+                }                        
+                std::cout<<std::endl;
+            }
+        }
+
+        
+            
     }
-    */
     
     //std::cout<<"tree filling with mass: "<<mass<<", pt: "<<pt<<std::endl;
     tree->Fill();
