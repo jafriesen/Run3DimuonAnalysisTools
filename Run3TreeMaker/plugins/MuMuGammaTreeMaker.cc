@@ -65,6 +65,12 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 
+#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 //#include "TMtuple.hh"
 #include "MMGUtils.hh"
 
@@ -105,12 +111,15 @@ private:
   const edm::EDGetTokenT<double>                          rhoToken;
   const edm::EDGetTokenT<std::vector<pat::Photon> >         photonsToken;
   const edm::EDGetTokenT<std::vector<pat::PackedCandidate> >         pfCandsToken;
+  const edm::EDGetTokenT<std::vector<reco::GenParticle> >         prunedGenToken;
+  const edm::EDGetTokenT<std::vector<pat::PackedGenParticle> >    packedGenToken;
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> esToken;
 
   std::vector<std::string> triggerPathsVector;
   std::map<std::string, int> triggerPathsMap;
 
   bool doL1;
+  bool doGEN;
   triggerExpression::Data triggerCache_;
 
   edm::InputTag                algInputTag_;
@@ -188,6 +197,16 @@ private:
   std::vector<float> pfCandPhotonEnergy;
   std::vector<float> pfCandPhotonEt;
   std::vector<float> pfCandPhotonEt2;
+
+  int motherID1;
+  int motherID2;
+
+  int simType1;
+  int simType2;
+
+  int simExtType1;
+  int simExtType2;
+    
 };
 
 //
@@ -211,8 +230,11 @@ MuMuGammaTreeMaker::MuMuGammaTreeMaker(const edm::ParameterSet& iConfig):
     //rhoToken                 (consumes<double>                                 (iConfig.getParameter<edm::InputTag>("rho"))), 
     photonsToken             (consumes<std::vector<pat::Photon> >         (iConfig.getParameter<edm::InputTag>("photons"))),
     pfCandsToken             (consumes<std::vector<pat::PackedCandidate> >         (iConfig.getParameter<edm::InputTag>("pfcands"))),
+    prunedGenToken  (consumes<std::vector<reco::GenParticle> >      (iConfig.getParameter<edm::InputTag>("prunedGenParticles"))),
+    packedGenToken  (consumes<std::vector<pat::PackedGenParticle> > (iConfig.getParameter<edm::InputTag>("packedGenParticles"))),
     esToken(esConsumes<TransientTrackBuilder, TransientTrackRecord>(edm::ESInputTag("", "TransientTrackBuilder"))),
-    doL1                     (iConfig.existsAs<bool>("doL1")               ?    iConfig.getParameter<bool>  ("doL1")            : false)
+    doL1                     (iConfig.existsAs<bool>("doL1")               ?    iConfig.getParameter<bool>  ("doL1")            : false),
+    doGEN                    (iConfig.existsAs<bool>("doGEN")               ?    iConfig.getParameter<bool>  ("doGEN")            : false)
 {
     usesResource("TFileService");
     if (doL1) {
@@ -244,7 +266,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
   using namespace edm;
   using namespace std;
   using namespace reco;
-
+  
   Handle<vector<reco::Vertex> > primaryVerticesH;
   iEvent.getByToken(primaryVerticesToken, primaryVerticesH);
   npv = primaryVerticesH->size();
@@ -369,7 +391,22 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     pt=dimu.Pt();
     dr=mu1.DeltaR(mu2);
 
-    //std::cout<<std::endl<<"pt: "<<pt1<<", "<<pt2<<std::endl;
+    motherID1=0; motherID2=0;
+    simType1=999; simType2=999;
+    simExtType1=999; simExtType2=999;
+    
+    if (doGEN) {
+        motherID1=muonsH->at(idx[0]).simMotherPdgId(); motherID2=muonsH->at(idx[1]).simMotherPdgId();
+        simType1=muonsH->at(idx[0]).simType(); simType2=muonsH->at(idx[1]).simType();
+        simExtType1=muonsH->at(idx[0]).simExtType(); simExtType2=muonsH->at(idx[1]).simExtType();
+    }
+    
+    /*
+    std::cout<<"pt: "<<pt1<<", "<<pt2<<" eta: "<<eta1<<", "<<eta2<<" phi: "<<std::endl;
+    std::cout<<"motherID1: "<<muonsH->at(idx[0]).simMotherPdgId()<<" motherID2: "<<muonsH->at(idx[1]).simMotherPdgId()<<std::endl;
+    std::cout<<"simType1: "<<muonsH->at(idx[0]).simType()<<" simType2: "<<muonsH->at(idx[1]).simType()<<std::endl;
+    std::cout<<"simExtType1: "<<muonsH->at(idx[0]).simExtType()<<" simExtType2: "<<muonsH->at(idx[1]).simExtType()<<std::endl;
+    */
     //std::cout<<"pfIso: "<<pfIso1<<", "<<pfIso2<<std::endl;
     //std::cout << "id1 " << (muonsH->at(idx[0])).isHighPtMuon(pv) << (muonsH->at(idx[0])).isLooseMuon() << (muonsH->at(idx[0])).isMediumMuon() << (muonsH->at(idx[0])).isSoftMuon(pv) << (muonsH->at(idx[0])).isTightMuon(pv) << std::endl;
     //std::cout << "id2 " << (muonsH->at(idx[1])).isHighPtMuon(pv) << (muonsH->at(idx[1])).isLooseMuon() << (muonsH->at(idx[1])).isMediumMuon() << (muonsH->at(idx[1])).isSoftMuon(pv) << (muonsH->at(idx[1])).isTightMuon(pv) << std::endl;
@@ -487,6 +524,40 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
         hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
 	}
 
+    if (doGEN) {
+
+        Handle<vector<reco::GenParticle> > prunedGenParticles;
+        iEvent.getByToken(prunedGenToken, prunedGenParticles);
+
+        Handle<vector<pat::PackedGenParticle> > packedGenParticles;
+        iEvent.getByToken(packedGenToken, packedGenParticles);
+
+        for (auto genp = prunedGenParticles->begin(); genp != prunedGenParticles->end(); ++genp) {            
+            if (abs(genp->pdgId())==221 or abs(genp->pdgId())==113 or abs(genp->pdgId())==223 or abs(genp->pdgId())==331 or abs(genp->pdgId()==333)) {
+                std::cout<<"genp id: "<<genp->pdgId()<<" pt: "<<genp->pt()<<" eta: "<<genp->eta()<<" status: "<<genp->status();
+                if (genp->numberOfDaughters()>0) {
+                    int daughterMuons=0;
+                    for (int i=0; i<(int)genp->numberOfDaughters(); ++i) {
+                        std::cout<<" daughter "<<i<<" "<<genp->daughter(i)->pdgId();
+                        if (abs(genp->daughter(i)->pdgId())==13) daughterMuons+=1;
+                    }
+                    if (daughterMuons==2) {
+                        //check for photons
+                        for (auto pgp = packedGenParticles->begin(); pgp != packedGenParticles->end(); ++pgp) {
+                            if (pgp->pdgId()==22 and pgp->motherRef()->pdgId()==genp->pdgId()) {
+                                std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt();
+                            }
+                        }
+                    }
+                }                        
+                std::cout<<std::endl;
+            }
+        }
+
+        
+            
+    }
+    
     //std::cout<<"tree filling with mass: "<<mass<<", pt: "<<pt<<std::endl;
     tree->Fill();
   }
@@ -521,6 +592,13 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("trkChi22"              , &trkChi22                      , "trkChi22/F"  );
     tree->Branch("trkNdof1"              , &trkNdof1                      , "trkNdof1/F"  );
     tree->Branch("trkNdof2"              , &trkNdof2                      , "trkNdof2/F"  );
+
+    tree->Branch("motherID1"              , &motherID1                      , "motherID1/I"  );
+    tree->Branch("motherID2"              , &motherID2                      , "motherID2/I"  );
+    tree->Branch("simType1"              , &simType1                      , "simType1/I"  );
+    tree->Branch("simType2"              , &simType2                      , "simType2/I"  );
+    tree->Branch("simExtType1"              , &simExtType1                      , "simExtType1/I"  );
+    tree->Branch("simExtType2"              , &simExtType2                      , "simExtType2/I"  );
 
     //tree->Branch("rho"                 , &rho                         , "rho/F"     );
 
