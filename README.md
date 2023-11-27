@@ -4,8 +4,8 @@
 #### Setup
 Setup a CMSSW working area and clone the `Run3DimuonAnalysisTools` repo:
 ```
-cmsrel CMSSW_12_4_2
-cd CMSSW_12_4_2/src
+cmsrel CMSSW_13_0_10
+cd CMSSW_13_0_10/src
 cmsenv
 git cms-init
 git clone git@github.com:jafriesen/Run3DimuonAnalysisTools.git
