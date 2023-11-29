@@ -218,11 +218,29 @@ private:
   int motherID1;
   int motherID2;
 
-  int simType1;
-  int simType2;
+  int motherGenID;
+  int mupGenID;
+  int mumGenID;
 
-  int simExtType1;
-  int simExtType2;
+  std::vector<int> matchedDaughtersIDs;
+  float mathedPhotonPt;
+  float mathedPhotonEta;
+  float mathedPhotonPhi;
+
+  float mu1_id;
+  float mu2_id;
+
+  // flags for GEN matched decays
+  bool isEta2MuMu;
+  bool isEta2MuMuGamma;
+  bool isEtaPrime2MuMu;
+  bool isEtaPrime2MuMuGamma;
+  bool isOmega2MuMu;
+  bool isOmega2Pi0MuMu;
+  bool isRho2MuMu;
+  // bool isRho2Pi0MuMu; //not observed?
+  bool isPhi2MuMu;
+  bool isPhi2KK;
     
 };
 
@@ -438,20 +456,23 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     //std::cout<<dxy1<<" "<<dz1<<" "<<trkChi21<<" "<<trkNdof1<<std::endl;
     
     TLorentzVector mu1;
-    mu1.SetPtEtaPhiM(pt1,eta1,phi1,0.105658);
+    mu1.SetPtEtaPhiM(pt1,eta1,phi1,mu_mass);
 
     TLorentzVector mu2;
-    mu2.SetPtEtaPhiM(pt2,eta2,phi2,0.105658);
+    mu2.SetPtEtaPhiM(pt2,eta2,phi2,mu_mass);
 
     TLorentzVector dimu = mu1+mu2;
     mass=dimu.M();
     pt=dimu.Pt();
     dr=mu1.DeltaR(mu2);
 
-    motherID1=0; motherID2=0;
+    motherID1=0; motherID2=0; 
     simType1=999; simType2=999;
     simExtType1=999; simExtType2=999;
     
+    mu1_id        = (muonsH->at(idx[0])).pdgId();
+    mu2_id        = (muonsH->at(idx[1])).pdgId();
+
     if (doGEN) {
         motherID1=muonsH->at(idx[0]).simMotherPdgId(); motherID2=muonsH->at(idx[1]).simMotherPdgId();
         simType1=muonsH->at(idx[0]).simType(); simType2=muonsH->at(idx[1]).simType();
@@ -579,9 +600,21 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     hltResult_.clear();
     for (size_t i = 0; i < triggerPathsVector.size(); i++) {
         hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
-	}
+    }
 
-    if (doGEN) {
+    motherGenID = 0; 
+    mupGenID = 0; mumGenID = 0;
+    isEta2MuMu            = false;
+    isEta2MuMuGamma       = false;
+    isEtaPrime2MuMu       = false;
+    isEtaPrime2MuMuGamma  = false;
+    isOmega2MuMu         = false;
+    isOmega2Pi0MuMu       = false;
+    isRho2MuMu            = false;
+    isPhi2MuMu            = false;
+    isPhi2KK              = false;
+
+    if (doGEN and (mass < 2.0)) {
 
         Handle<vector<reco::GenParticle> > prunedGenParticles;
         iEvent.getByToken(prunedGenToken, prunedGenParticles);
@@ -589,33 +622,100 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
         Handle<vector<pat::PackedGenParticle> > packedGenParticles;
         iEvent.getByToken(packedGenToken, packedGenParticles);
 
-        for (auto genp = prunedGenParticles->begin(); genp != prunedGenParticles->end(); ++genp) {            
-            if (abs(genp->pdgId())==221 or abs(genp->pdgId())==113 or abs(genp->pdgId())==223 or abs(genp->pdgId())==331 or abs(genp->pdgId()==333)) {
-                std::cout<<"genp id: "<<genp->pdgId()<<" pt: "<<genp->pt()<<" eta: "<<genp->eta()<<" status: "<<genp->status();
-                if (genp->numberOfDaughters()>0) {
-                    int daughterMuons=0;
-                    for (int i=0; i<(int)genp->numberOfDaughters(); ++i) {
-                        std::cout<<" daughter "<<i<<" "<<genp->daughter(i)->pdgId();
-                        if (abs(genp->daughter(i)->pdgId())==13) daughterMuons+=1;
-                    }
-                    if (daughterMuons==2) {
-                        //check for photons
-                        for (auto pgp = packedGenParticles->begin(); pgp != packedGenParticles->end(); ++pgp) {
-                            if (pgp->pdgId()==22 and pgp->motherRef()->pdgId()==genp->pdgId()) {
-                                std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt();
-                            }
-                        }
-                    }
-                }                        
-                std::cout<<std::endl;
-            }
+        float dr_mup_gen = 999.;
+        float dr_mum_gen = 999.;
+        TLorentzVector mup_gen, mum_gen, daught3_gen; 
+	      TLorentzVector *mup_reco;
+	      TLorentzVector *mum_reco;
+        if( mu1_id == 13) {
+          mum_reco = &mu1;
+          mup_reco = &mu2;
+        }
+        else {
+          mum_reco = &mu2;
+          mup_reco = &mu1;
         }
 
-        
+        for (auto genp = prunedGenParticles->begin(); genp != prunedGenParticles->end(); ++genp) {            
+            if (abs(genp->pdgId())==221 or abs(genp->pdgId())==113 or abs(genp->pdgId())==223 or abs(genp->pdgId())==331 or abs(genp->pdgId()==333)) {
+                // std::cout<<"genp id: "<<genp->pdgId()<<" pt: "<<genp->pt()<<" eta: "<<genp->eta()<<" status: "<<genp->status();
+                    int nDaughterMuons = 0;
+                    int mup_idx = 99;
+                    int mum_idx = 99;
+                    // int daught3_idx = 99;
+
+                    for (int i=0; i<(int)genp->numberOfDaughters(); ++i) {
+
+                      // check if muons and save idx of daughters
+                      if (genp->daughter(i)->pdgId()==13){
+                        mum_idx = i;
+                        nDaughterMuons+=1;
+                      } else if  (genp->daughter(i)->pdgId()== -13){
+                        mup_idx = i;
+                        nDaughterMuons+=1;
+                      }
             
+                    }
+                    if (nDaughterMuons==2) {
+                      // try to match pair of reco muons with a pair of daughters
+                      auto daught_mup =  &(*genp->daughter(mup_idx));
+                      auto daught_mum =  &(*genp->daughter(mum_idx));
+
+                      mup_gen.SetPtEtaPhiM( daught_mup->pt(), daught_mup->eta(), daught_mup->phi(),mu_mass);
+                      mum_gen.SetPtEtaPhiM( daught_mum->pt(), daught_mum->eta(), daught_mum->phi(),mu_mass);
+                      dr_mup_gen = mup_gen.DeltaR(*mup_reco);
+                      dr_mum_gen = mum_gen.DeltaR(*mum_reco);
+
+                      matchedDaughtersIDs.clear();
+                      std::cout<<"Mother with 2 muons ID == " << genp->pdgId() <<std::endl;
+                      for (int i=0; i<(int)genp->numberOfDaughters(); ++i) {
+                        matchedDaughtersIDs.push_back(genp->daughter(i)->pdgId());
+                        std::cout<<"Daughter "<< i << "  ID == " << genp->daughter(i)->pdgId()<<std::endl;
+                      }
+
+                      if ((dr_mup_gen < MIN_DR_TRUTH) and (dr_mum_gen < MIN_DR_TRUTH)){
+                        motherGenID = genp->pdgId();
+                        mupGenID = daught_mup->pdgId();
+                        mumGenID = daught_mum->pdgId();
+                        std::cout<<"Matched "<< daught_mup->pt() << "  " << mup_reco->Pt() << "  " << daught_mum->pt() << "  " << mum_reco->Pt() << "for mother ID == " << motherGenID <<std::endl;
+                        
+                      }
+                      
+                      //check for photons
+                      bool aPhoton = false;
+                      for (auto pgp = packedGenParticles->begin(); pgp != packedGenParticles->end(); ++pgp) {
+                            if (pgp->pdgId()==22 and pgp->motherRef()->pdgId()==genp->pdgId()) {
+                                std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt()<<std::endl;
+                                mathedPhotonPt  = pgp->pt();
+                                mathedPhotonEta = pgp->eta();
+                                mathedPhotonPhi = pgp->phi();
+                                aPhoton = true;
+                                
+                            }
+                        }
+                      // isEta2MuMu
+                      // isEta2MuMuGamma
+                      // isEtaPrime2MuMu
+                      // isEtaPrime2MuMuGamma
+                      // isOmega2MuMu
+                      // isOmega2Pi0MuMu
+
+                      // isRho2MuMu
+                      // isPhi2MuMu
+                      // isPhi2KK
+                      if      ((abs(genp->pdgId()) == 221) and !(aPhoton)) isEta2MuMu = true;
+                      else if ((abs(genp->pdgId()) == 221) and aPhoton)    isEta2MuMuGamma = true;
+                      else if ((abs(genp->pdgId()) == 331) and !(aPhoton)) isEtaPrime2MuMu = true;
+                      else if ((abs(genp->pdgId()) == 331) and aPhoton)    isEtaPrime2MuMuGamma = true;
+                      else if ((abs(genp->pdgId()) == 223) and !(aPhoton)) isOmega2MuMu = true;
+                      // else if ((abs(genp->pdgId()) == 223) and aPhoton)    isOmega2Pi0MuMu = true;    // this one is not so easy     
+                      else if ((abs(genp->pdgId()) == 113) and !(aPhoton)) isRho2MuMu = true;
+                      else if ((abs(genp->pdgId()) == 333) and !(aPhoton)) isPhi2MuMu = true;
+
+                    }
+            }
+        }    
     }
-    
-    //std::cout<<"tree filling with mass: "<<mass<<", pt: "<<pt<<std::endl;
     tree->Fill();
   }
 }
@@ -688,6 +788,21 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("simType2"              , &simType2                      , "simType2/I"  );
     tree->Branch("simExtType1"              , &simExtType1                      , "simExtType1/I"  );
     tree->Branch("simExtType2"              , &simExtType2                      , "simExtType2/I"  );
+
+    tree->Branch("matchedDaughtersIDs", "std::vector<int>", &matchedDaughtersIDs, 32000, 0);
+    tree->Branch("mathedPhotonPt"              , &mathedPhotonPt                      , "mathedPhotonPt/F"  );
+    tree->Branch("mathedPhotonEta"              , &mathedPhotonEta                      , "mathedPhotonEta/F"  );
+    tree->Branch("mathedPhotonPhi"              , &mathedPhotonPhi                      , "mathedPhotonPhi/F"  );
+
+    tree->Branch("isEta2MuMu",               &isEta2MuMu,             "isEta2MuMu/b");    
+    tree->Branch("isEta2MuMuGamma",          &isEta2MuMuGamma,            "isEta2MuMuGamma/b");
+    tree->Branch("isEtaPrime2MuMu",          &isEtaPrime2MuMu,            "isEtaPrime2MuMu/b");
+    tree->Branch("isEtaPrime2MuMuGamma",     &isEtaPrime2MuMuGamma,             "isEtaPrime2MuMuGamma/b");
+    tree->Branch("isOmega2MuMu",             &isOmega2MuMu,             "isOmega2MuMu/b");
+    tree->Branch("isOmega2Pi0MuMu",          &isOmega2Pi0MuMu,            "isOmega2Pi0MuMu/b");
+    tree->Branch("isRho2MuMu",               &isRho2MuMu,             "isRho2MuMu/b");
+    tree->Branch("isPhi2MuMu",               &isPhi2MuMu,             "isPhi2MuMu/b");
+    tree->Branch("isPhi2KK",                 &isPhi2KK,             "isPhi2KK/b");
 
     //tree->Branch("rho"                 , &rho                         , "rho/F"     );
 
