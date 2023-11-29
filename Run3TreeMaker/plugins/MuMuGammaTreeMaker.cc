@@ -411,16 +411,28 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
       reco::TrackRef iTrack = muonsH->at(idx[i]).innerTrack();
       reco::TrackRef oTrack = muonsH->at(idx[i]).outerTrack();
 
-      iValidFraction[i] = iTrack->validFraction();
-      innerChi2[i] = iTrack->normalizedChi2();
-      layersWithMeasurement[i] = iTrack->hitPattern().trackerLayersWithMeasurement();
-      outerChi2[i] = oTrack->normalizedChi2();
+      if (!(iTrack.isNonnull() and oTrack.isNonnull() and gTrack.isNonnull())) {
+        std::cout << "event " << eventNum << ": null track" << std::endl;
+        iValidFraction[i] = -1;
+        innerChi2[i] = -1;
+        layersWithMeasurement[i] = -1;
+        outerChi2[i] = -1;
+        qProd[i] = -1;
+        vMuonHitComb[i] = -1;
+        mva[i] = -1;
+      }
+      else {
+        iValidFraction[i] = iTrack->validFraction();
+        innerChi2[i] = iTrack->normalizedChi2();
+        layersWithMeasurement[i] = iTrack->hitPattern().trackerLayersWithMeasurement();
+        outerChi2[i] = oTrack->normalizedChi2();
 
-      qProd[i] = iTrack->charge() * oTrack->charge();
+        qProd[i] = iTrack->charge() * oTrack->charge();
 
-      vMuonHitComb[i] = validMuonHitComb( muonsH->at(idx[i]) );
+        vMuonHitComb[i] = validMuonHitComb( muonsH->at(idx[i]) );
 
-      mva[i] = muonsH->at(idx[i]).softMvaValue();
+        mva[i] = muonsH->at(idx[i]).softMvaValue();
+      }
     }
 
     //std::cout<<dxy1<<" "<<dz1<<" "<<trkChi21<<" "<<trkNdof1<<std::endl;
