@@ -58,4 +58,6 @@ reco::Track fix_track(const reco::TrackRef& tk);
 
 double photonPfIso03(pat::PackedCandidate pho, edm::Handle<pat::PackedCandidateCollection> pfcands);
 
+float validMuonHitComb(const pat::Muon& muon);
+
 #endif // __UTILS__

@@ -115,3 +115,43 @@ double photonPfIso03(pat::PackedCandidate pho, edm::Handle<pat::PackedCandidateC
     }
     return ptsum;
 }
+
+float validMuonHitComb(const pat::Muon& muon) {
+
+    const reco::HitPattern& gMpattern = muon.globalTrack()->hitPattern();
+
+    std::vector<int> fvDThits{0, 0, 0, 0};
+    std::vector<int> fvRPChits{0, 0, 0, 0};
+    std::vector<int> fvCSChits{0, 0, 0, 0};
+
+    float vMuonHitComb = 0;
+
+    for (int i = 0; i < gMpattern.numberOfAllHits(reco::HitPattern::TRACK_HITS); i++) {
+    uint32_t hit = gMpattern.getHitPattern(reco::HitPattern::TRACK_HITS, i);
+    if (!gMpattern.validHitFilter(hit))
+      continue;
+
+    int muStation0 = gMpattern.getMuonStation(hit) - 1;
+    if (muStation0 >= 0 && muStation0 < 4) {
+      if (gMpattern.muonDTHitFilter(hit))
+        fvDThits[muStation0]++;
+      if (gMpattern.muonRPCHitFilter(hit))
+        fvRPChits[muStation0]++;
+      if (gMpattern.muonCSCHitFilter(hit))
+        fvCSChits[muStation0]++;
+    }
+    }
+
+    for (unsigned int station = 0; station < 4; ++station) {
+        vMuonHitComb += (fvDThits[station]) / 2.;
+        vMuonHitComb += fvRPChits[station];
+
+        if (fvCSChits[station] > 6) {
+          vMuonHitComb += 6;
+        } else {
+          vMuonHitComb += fvCSChits[station];
+        }
+    }
+
+    return vMuonHitComb;
+}
