@@ -159,6 +159,23 @@ private:
   float trkNdof1;
   float trkNdof2;
 
+  // MVA Variables
+  float segmentCompatibility[2];
+  float chi2LocalMomentum[2];
+  float chi2LocalPosition[2];
+  float glbTrackProbability[2];
+  float iValidFraction[2];
+  float layersWithMeasurement[2];
+  float trkKink[2];
+  float log2PlusGlbKink[2];
+  float timeAtIpInOutErr[2];
+  float outerChi2[2];
+  float innerChi2[2];
+  float trkRelChi2[2];
+  float vMuonHitComb[2];
+  float qProd[2];
+  float mva[2];
+
   float probVtx;
   float vtxX;
   float vtxY;
@@ -210,17 +227,8 @@ private:
   float mathedPhotonEta;
   float mathedPhotonPhi;
 
-
-
-  int simType1;
-  int simType2;
-
-  int simExtType1;
-  int simExtType2;
-
   float mu1_id;
   float mu2_id;
-
 
   // flags for GEN matched decays
   bool isEta2MuMu;
@@ -233,9 +241,6 @@ private:
   // bool isRho2Pi0MuMu; //not observed?
   bool isPhi2MuMu;
   bool isPhi2KK;
-
-
-  
     
 };
 
@@ -408,6 +413,46 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     trkNdof1 = muonsH->at(idx[0]).muonBestTrack()->ndof();
     trkNdof2 = muonsH->at(idx[1]).muonBestTrack()->ndof();
 
+    for (int i : idx) {
+      chi2LocalMomentum[i] = muonsH->at(idx[i]).combinedQuality().chi2LocalMomentum;
+      chi2LocalPosition[i] = muonsH->at(idx[i]).combinedQuality().chi2LocalPosition;
+      glbTrackProbability[i] = muonsH->at(idx[i]).combinedQuality().glbTrackProbability;
+
+      trkKink[i] = muonsH->at(idx[i]).combinedQuality().trkKink;
+      log2PlusGlbKink[i] = TMath::Log(2 + muonsH->at(idx[i]).combinedQuality().glbKink);
+      trkRelChi2[i] = muonsH->at(idx[i]).combinedQuality().trkRelChi2;
+      segmentCompatibility[i] = muonsH->at(idx[i]).segmentCompatibility();
+
+      timeAtIpInOutErr[i] = muonsH->at(idx[i]).time().timeAtIpInOutErr;
+
+      reco::TrackRef gTrack = muonsH->at(idx[i]).globalTrack();
+      reco::TrackRef iTrack = muonsH->at(idx[i]).innerTrack();
+      reco::TrackRef oTrack = muonsH->at(idx[i]).outerTrack();
+
+      if (!(iTrack.isNonnull() and oTrack.isNonnull() and gTrack.isNonnull())) {
+        std::cout << "event " << eventNum << ": null track" << std::endl;
+        iValidFraction[i] = -1;
+        innerChi2[i] = -1;
+        layersWithMeasurement[i] = -1;
+        outerChi2[i] = -1;
+        qProd[i] = -1;
+        vMuonHitComb[i] = -1;
+        mva[i] = -1;
+      }
+      else {
+        iValidFraction[i] = iTrack->validFraction();
+        innerChi2[i] = iTrack->normalizedChi2();
+        layersWithMeasurement[i] = iTrack->hitPattern().trackerLayersWithMeasurement();
+        outerChi2[i] = oTrack->normalizedChi2();
+
+        qProd[i] = iTrack->charge() * oTrack->charge();
+
+        vMuonHitComb[i] = validMuonHitComb( muonsH->at(idx[i]) );
+
+        mva[i] = muonsH->at(idx[i]).softMvaValue();
+      }
+    }
+
     //std::cout<<dxy1<<" "<<dz1<<" "<<trkChi21<<" "<<trkNdof1<<std::endl;
     
     TLorentzVector mu1;
@@ -555,7 +600,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     hltResult_.clear();
     for (size_t i = 0; i < triggerPathsVector.size(); i++) {
         hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
-	}
+    }
 
     motherGenID = 0; 
     mupGenID = 0; mumGenID = 0;
@@ -669,12 +714,8 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
 
                     }
             }
-        }
-
-        
-            
+        }    
     }
-    
     tree->Fill();
   }
 }
@@ -700,6 +741,38 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("pfIso1"              , &pfIso1                      , "pfIso1/F"  );
     tree->Branch("pfIso2"              , &pfIso2                      , "pfIso2/F"  );
 
+    tree->Branch("segmentCompatibility1",     &segmentCompatibility[0],     "segmentCompatibility1/F"   );
+    tree->Branch("chi2LocalMomentum1",        &chi2LocalMomentum[0],        "chi2LocalMomentum1/F"      );
+    tree->Branch("chi2LocalPosition1",        &chi2LocalPosition[0],        "chi2LocalPosition1/F"      );
+    tree->Branch("glbTrackProbability1",      &glbTrackProbability[0],      "glbTrackProbability1/F"    );
+    tree->Branch("iValidFraction1",           &iValidFraction[0],           "iValidFraction1/F"         );
+    tree->Branch("layersWithMeasurement1",    &layersWithMeasurement[0],    "layersWithMeasurement1/F"  );
+    tree->Branch("trkKink1",                  &trkKink[0],                  "trkKink1/F"                );
+    tree->Branch("log2PlusGlbKink1",          &log2PlusGlbKink[0],          "log2PlusGlbKink1/F"        );
+    tree->Branch("timeAtIpInOutErr1",         &timeAtIpInOutErr[0],         "timeAtIpInOutErr1/F"       );
+    tree->Branch("outerChi21",                &outerChi2[0],                "outerChi21/F"              );
+    tree->Branch("innerChi21",                &innerChi2[0],                "innerChi21/F"              );
+    tree->Branch("trkRelChi21",               &trkRelChi2[0],               "trkRelChi21/F"             );
+    tree->Branch("vMuonHitComb1",             &vMuonHitComb[0],             "vMuonHitComb1/F"           );
+    tree->Branch("qProd1",                    &qProd[0],                    "qProd1/F"                  );
+    tree->Branch("mva1",                      &mva[0],                      "mva1/F"                    );
+
+    tree->Branch("segmentCompatibility2",     &segmentCompatibility[1],     "segmentCompatibility2/F"   );
+    tree->Branch("chi2LocalMomentum2",        &chi2LocalMomentum[1],        "chi2LocalMomentum2/F"      );
+    tree->Branch("chi2LocalPosition2",        &chi2LocalPosition[1],        "chi2LocalPosition2/F"      );
+    tree->Branch("glbTrackProbability2",      &glbTrackProbability[1],      "glbTrackProbability2/F"    );
+    tree->Branch("iValidFraction2",           &iValidFraction[1],           "iValidFraction2/F"         );
+    tree->Branch("layersWithMeasurement2",    &layersWithMeasurement[1],    "layersWithMeasurement2/F"  );
+    tree->Branch("trkKink2",                  &trkKink[1],                  "trkKink2/F"                );
+    tree->Branch("log2PlusGlbKink2",          &log2PlusGlbKink[1],          "log2PlusGlbKink2/F"        );
+    tree->Branch("timeAtIpInOutErr2",         &timeAtIpInOutErr[1],         "timeAtIpInOutErr2/F"       );
+    tree->Branch("outerChi22",                &outerChi2[1],                "outerChi22/F"              );
+    tree->Branch("innerChi22",                &innerChi2[1],                "innerChi22/F"              );
+    tree->Branch("trkRelChi22",               &trkRelChi2[1],               "trkRelChi22/F"             );
+    tree->Branch("vMuonHitComb2",             &vMuonHitComb[1],             "vMuonHitComb2/F"           );
+    tree->Branch("qProd2",                    &qProd[1],                    "qProd2/F"                  );
+    tree->Branch("mva2",                      &mva[1],                      "mva2/F"                    );
+
     tree->Branch("dxy1"              , &dxy1                      , "dxy1/F"  );
     tree->Branch("dxy2"              , &dxy2                      , "dxy2/F"  );
     tree->Branch("dz1"              , &dz1                      , "dz1/F"  );
@@ -715,6 +788,7 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("simType2"              , &simType2                      , "simType2/I"  );
     tree->Branch("simExtType1"              , &simExtType1                      , "simExtType1/I"  );
     tree->Branch("simExtType2"              , &simExtType2                      , "simExtType2/I"  );
+
     tree->Branch("matchedDaughtersIDs", "std::vector<int>", &matchedDaughtersIDs, 32000, 0);
     tree->Branch("mathedPhotonPt"              , &mathedPhotonPt                      , "mathedPhotonPt/F"  );
     tree->Branch("mathedPhotonEta"              , &mathedPhotonEta                      , "mathedPhotonEta/F"  );

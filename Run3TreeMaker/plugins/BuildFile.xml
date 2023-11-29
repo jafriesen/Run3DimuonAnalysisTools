@@ -6,7 +6,8 @@
 <use name="DataFormats/HLTReco"/>
 <use name="DataFormats/Scouting"/>
 <use name="DataFormats/PatCandidates"/>
-<use name="DataFormats/PatCandidates"/>
+<use name="DataFormats/HepMCCandidate"/>
+<use name="SimDataFormats/GeneratorProducts"/>
 <use name="L1Trigger/L1TGlobal"/>
 <use name="DataFormats/L1TGlobal"/>
 <use name="HLTrigger/HLTcore"/>
