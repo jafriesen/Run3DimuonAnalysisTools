@@ -39,6 +39,8 @@ const float ele_mass = 0.000511; //GeV
 const float mu_mass = 0.105658; //GeV
 const float pi_mass = 0.140; //GeV
 const float MIN_DR_TRUTH = 0.05;
+const float PI0_MASS = 0.13498;
+const float PI0_MASS_SHIFT = 0.05;
 TransientVertex computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf);
 
 //struct for saving the used tracks and muons

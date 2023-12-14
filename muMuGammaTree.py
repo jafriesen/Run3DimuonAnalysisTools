@@ -155,6 +155,7 @@ process.tree = cms.EDAnalyzer('MuMuGammaTreeMaker',
                                       prunedGenParticles  = cms.InputTag("prunedGenParticles"),
                                       packedGenParticles  = cms.InputTag("packedGenParticles"),
                                       doGEN = cms.bool( True ),
+                                      doFullGEN = cms.bool( True ),
                                       primaryVertices  = cms.InputTag("offlineSlimmedPrimaryVertices"),
                                       displacedVertices  = cms.InputTag("slimmedSecondaryVertices"),
                                   )
