@@ -15,6 +15,7 @@
 #include <memory>
 #include <TTree.h>
 #include <TLorentzVector.h>
+#include <Math/Vector4D.h>
 #include "TMath.h"
 #include <TPRegexp.h>
 
@@ -90,7 +91,7 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   bool isAncestor(const reco::GenParticle* ancestor, const reco::Candidate* particle);
-  bool isMatched(const reco::Candidate* gen_particle, const TLorentzVector* reco_vector, float cand_mass);
+  bool isMatched(const reco::Candidate* gen_particle, const ROOT::Math::PtEtaPhiMVector* reco_vector, float cand_mass);
   bool isPi0(const std::vector<float>& photonsPt, const std::vector<float>& photonsEta, const std::vector<float>& photonsPhi);
 
 private:
@@ -167,7 +168,7 @@ private:
   float vtx_chi2;
 
   // muon variables
-  TLorentzVector mu_v[2];
+  ROOT::Math::PtEtaPhiMVector mu_v[2];
   std::vector<bool> mu_ID[2];
   int   mu_idx[2]; // let standard be 0 = mu-, 1 = mu+
   float mu_pfIso[2];
@@ -341,13 +342,11 @@ bool MuMuGammaTreeMaker::isAncestor(const reco::GenParticle* ancestor, const rec
 
 //check if invariant mass of 2 photons is close to pi0
 bool MuMuGammaTreeMaker::isPi0(const std::vector<float>& photonsPt, const std::vector<float>& photonsEta, const std::vector<float>& photonsPhi) {
-  TLorentzVector photon1;
-  TLorentzVector photon2;
-  TLorentzVector diPhoton;
+  ROOT::Math::PtEtaPhiMVector photon1( photonsPt[0], photonsEta[0], photonsPhi[0], 0.);
+  ROOT::Math::PtEtaPhiMVector photon2( photonsPt[1], photonsEta[1], photonsPhi[1], 0.);
+  ROOT::Math::PtEtaPhiMVector diPhoton;
   float diPhotonMass;
 
-  photon1.SetPtEtaPhiM( photonsPt[0], photonsEta[0], photonsPhi[0], 0.);
-  photon2.SetPtEtaPhiM( photonsPt[1], photonsEta[1], photonsPhi[1], 0.);
   diPhoton = photon1 + photon2;
   diPhotonMass = diPhoton.M();
 
@@ -356,11 +355,10 @@ bool MuMuGammaTreeMaker::isPi0(const std::vector<float>& photonsPt, const std::v
 }
 
 // check if a vector of gen particle and reco vector match (by dR)
-bool MuMuGammaTreeMaker::isMatched(const reco::Candidate* gen_particle, const TLorentzVector* reco_vector, float cand_mass) {
+bool MuMuGammaTreeMaker::isMatched(const reco::Candidate* gen_particle, const ROOT::Math::PtEtaPhiMVector* reco_vector, float cand_mass) {
   bool is_matched = false;
-  TLorentzVector gen_vec;
-  gen_vec.SetPtEtaPhiM( gen_particle->pt(), gen_particle->eta(), gen_particle->phi(), cand_mass);
-  float dr_gen_reco = gen_vec.DeltaR(*reco_vector);
+  ROOT::Math::PtEtaPhiMVector gen_vec( gen_particle->pt(), gen_particle->eta(), gen_particle->phi(), cand_mass);
+  float dr_gen_reco = ROOT::Math::VectorUtil::DeltaR(gen_vec,*reco_vector);
   is_matched = dr_gen_reco <= MIN_DR_TRUTH;
 
   return is_matched;
@@ -443,7 +441,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
           mu_pt[i] = iMu.pt();
           mu_eta[i] = iMu.eta();
           mu_phi[i] = iMu.phi();
-          mu_v[i].SetPtEtaPhiM(mu_pt[i],mu_eta[i],mu_phi[i],mu_mass);
+          mu_v[i].SetCoordinates(mu_pt[i],mu_eta[i],mu_phi[i],mu_mass);
 
           // Compute the pfIso for the muon. Note: PUCorr = 0.5*muons_iter->puChargedHadronIso()                                                                              
           // -----------------------------------------------------------------------------------                                                                              
@@ -495,10 +493,10 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
           }
         }
 
-        TLorentzVector dimu = mu_v[0] + mu_v[1];
+        ROOT::Math::PtEtaPhiMVector dimu = mu_v[0] + mu_v[1];
         mumu_mass = dimu.M();
         mumu_pt = dimu.Pt();
-        mumu_deltaR = mu_v[0].DeltaR(mu_v[1]);
+        mumu_deltaR = ROOT::Math::VectorUtil::DeltaR(mu_v[0], mu_v[1]);
 
         Handle<vector<pat::Photon> > photonsH;
         iEvent.getByToken(photonsToken, photonsH);
@@ -582,8 +580,8 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
 
     gen_motherID.clear();
     matchedGenIdx = -1;
-    gen_reco_match[0].clear();
-    gen_reco_match[1].clear();
+    gen_mu_recoMatch[0].clear();
+    gen_mu_recoMatch[1].clear();
 
     gen_mumu_mass.clear();
     gen_mu_pt[0].clear();
@@ -618,7 +616,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     gen_matchedPhotonEta.clear();
     gen_matchedPhotonPhi.clear();
 
-    std::vector<int> matchedDaughterIDs;
+    std::vector<int> matchedDaughtersIDs;
     std::vector<float> matchedPhotonPt;
     std::vector<float> matchedPhotonEta;
     std::vector<float> matchedPhotonPhi;
@@ -675,13 +673,15 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
 
             if (isMatched1 and isMatched2) matchedGenIdx = gen_motherID.size();
 
-            gen_reco_match[0].push_back(isMatched1);
-            gen_reco_match[1].push_back(isMatched2);
+            gen_mu_recoMatch[0].push_back(isMatched1);
+            gen_mu_recoMatch[1].push_back(isMatched2);
 
             gen_motherID.push_back(genp->pdgId());
 
-            std::cout << (daught_mup + daught_mum).M() << std::endl;
-            gen_mumu_mass.push_back((daught_mup + daught_mum).M());
+            ROOT::Math::PtEtaPhiMVector gen_mu1_v(daught_mum->pt(), daught_mum->eta(), daught_mum->phi(), mu_mass);
+            ROOT::Math::PtEtaPhiMVector gen_mu2_v(daught_mup->pt(), daught_mup->eta(), daught_mup->phi(), mu_mass);
+            std::cout << (gen_mu1_v + gen_mu2_v).M() << std::endl;
+            gen_mumu_mass.push_back( (gen_mu1_v + gen_mu2_v).M() );
             gen_mu_pt[0].push_back(daught_mum->pt());
             gen_mu_pt[1].push_back(daught_mup->pt());
             gen_mu_eta[0].push_back(daught_mum->eta());
@@ -802,7 +802,7 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("mu1_dz"               , &mu_dz[0]                       , "mu1_dz/F"  );
     tree->Branch("mu1_trkChi2"          , &mu_trkChi2[0]                  , "mu1_trkChi2/F"  );
     tree->Branch("mu1_trkNdof"          , &mu_trkNdof[0]                  , "mu1_trkNdof/F"  );
-    
+
     tree->Branch("mu2_dxy"              , &mu_dxy[1]                      , "mu2_dxy/F"  );
     tree->Branch("mu2_dz"               , &mu_dz[1]                       , "mu2_dz/F"  );
     tree->Branch("mu2_trkChi2"          , &mu_trkChi2[1]                  , "mu2_trkChi2/F"  );
