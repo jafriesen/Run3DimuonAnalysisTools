@@ -568,7 +568,9 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     }
   }
 
-  if ( doFullGEN or (doGEN and fillTree) ) {
+  bool fillGenTree = false;
+  if ( doFullGEN or ( doGEN and fillTree ) ) {
+
     if ( fillTree ) {
       motherID[0]=muonsH->at(mu_idx[0]).simMotherPdgId();
       motherID[1]=muonsH->at(mu_idx[1]).simMotherPdgId();
@@ -576,6 +578,13 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
       simType[1]=muonsH->at(mu_idx[1]).simType();
       simExtType[0]=muonsH->at(mu_idx[0]).simExtType();
       simExtType[1]=muonsH->at(mu_idx[1]).simExtType();
+    } else {
+      motherID[0]=0;
+      motherID[1]=0;
+      simType[0]=0;
+      simType[1]=0;
+      simExtType[0]=0;
+      simExtType[1]=0;
     }
 
     gen_motherID.clear();
@@ -601,6 +610,11 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     gen_isPhi2MuMu.clear();
     gen_isPhi2KK.clear();
 
+    gen_matchedDaughtersIDs.clear();
+    gen_matchedPhotonPt.clear();
+    gen_matchedPhotonEta.clear();
+    gen_matchedPhotonPhi.clear();
+
     bool isEta2MuMu            = false;
     bool isEta2MuMuGamma       = false;
     bool isEtaPrime2MuMu       = false;
@@ -610,11 +624,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     bool isRho2MuMu            = false;
     bool isPhi2MuMu            = false;
     bool isPhi2KK              = false;
-
-    gen_matchedDaughtersIDs.clear();
-    gen_matchedPhotonPt.clear();
-    gen_matchedPhotonEta.clear();
-    gen_matchedPhotonPhi.clear();
 
     std::vector<int> matchedDaughtersIDs;
     std::vector<float> matchedPhotonPt;
@@ -627,7 +636,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     Handle<vector<pat::PackedGenParticle> > packedGenParticles;
     iEvent.getByToken(packedGenToken, packedGenParticles);
 
-    int test = 0;
     for (auto genp = prunedGenParticles->begin(); genp != prunedGenParticles->end(); ++genp) {            
       if (abs(genp->pdgId())==221 or abs(genp->pdgId())==113 or abs(genp->pdgId())==223 or abs(genp->pdgId())==331 or abs(genp->pdgId()==333)) {
       // std::cout<<"genp id: "<<genp->pdgId()<<" pt: "<<genp->pt()<<" eta: "<<genp->eta()<<" status: "<<genp->status();
@@ -649,8 +657,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
         }
         if (nDaughterMuons==2) {
           matchedDaughtersIDs.clear();
-          test++;
-          std::cout<<"test"<<test<<std::endl;
           // try to match pair of reco muons with a pair of daughters
           auto daught_mup =  &(*genp->daughter(mup_idx));
           auto daught_mum =  &(*genp->daughter(mum_idx));
@@ -660,7 +666,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             matchedDaughtersIDs.push_back(genp->daughter(i)->pdgId());
             // std::cout<<"Daughter "<< i << "  ID == " << genp->daughter(i)->pdgId()<<std::endl;
           }
-          gen_matchedDaughtersIDs.push_back(matchedDaughtersIDs);
 
           bool isMatched1 = false;
           bool isMatched2 = false;
@@ -669,7 +674,9 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             isMatched2 = isMatched(daught_mum, &mu_v[0], mu_mass);
           }
 
-          if ( doFullGEN or ( isMatched1 and isMatched2 ) ){
+          if ( ( doFullGEN and daught_mum->pt() > 2 and daught_mup->pt() > 2 and abs(daught_mum->eta()) < 2.5 and abs(daught_mup->eta()) < 2.5 ) or ( isMatched1 and isMatched2 ) ){
+
+            gen_matchedDaughtersIDs.push_back(matchedDaughtersIDs);
 
             if (isMatched1 and isMatched2) matchedGenIdx = gen_motherID.size();
 
@@ -680,7 +687,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
 
             ROOT::Math::PtEtaPhiMVector gen_mu1_v(daught_mum->pt(), daught_mum->eta(), daught_mum->phi(), mu_mass);
             ROOT::Math::PtEtaPhiMVector gen_mu2_v(daught_mup->pt(), daught_mup->eta(), daught_mup->phi(), mu_mass);
-            std::cout << (gen_mu1_v + gen_mu2_v).M() << std::endl;
             gen_mumu_mass.push_back( (gen_mu1_v + gen_mu2_v).M() );
             gen_mu_pt[0].push_back(daught_mum->pt());
             gen_mu_pt[1].push_back(daught_mup->pt());
@@ -700,7 +706,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
               // derefference and cast to the base class to make direct comparison
               const reco::Candidate* pgpPtr = &(*pgp);
               if (pgp->pdgId()==22 and isAncestor( &(*genp) , pgpPtr)) {
-                  std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt()<<std::endl;
+                  //std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt()<<std::endl;
                   matchedPhotonPt.push_back( pgp->pt() );
                   matchedPhotonEta.push_back( pgp->eta() );
                   matchedPhotonPhi.push_back( pgp->phi() );
@@ -735,10 +741,117 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             gen_isRho2MuMu.push_back(isRho2MuMu);
             gen_isPhi2MuMu.push_back(isPhi2MuMu);
             gen_isPhi2KK.push_back(isPhi2KK);
+
+            eventNum = iEvent.id().event();
+            lumiSec = iEvent.luminosityBlock();
+            runNum = iEvent.id().run();
+            fillGenTree = true;
           }
         }
       }
     }
+  }
+
+  if (fillTree and fillGenTree) {
+    tree->Fill();
+  } else if (fillTree) {
+    motherID[0]=0;
+    motherID[1]=0;
+    simType[0]=0;
+    simType[1]=0;
+    simExtType[0]=0;
+    simExtType[1]=0;
+
+    gen_motherID.clear();
+    matchedGenIdx = -1;
+    gen_mu_recoMatch[0].clear();
+    gen_mu_recoMatch[1].clear();
+
+    gen_mumu_mass.clear();
+    gen_mu_pt[0].clear();
+    gen_mu_pt[1].clear();
+    gen_mu_eta[0].clear();
+    gen_mu_eta[1].clear();
+    gen_mu_phi[0].clear();
+    gen_mu_phi[1].clear();
+
+    gen_isEta2MuMu.clear();
+    gen_isEta2MuMuGamma.clear();
+    gen_isEtaPrime2MuMu.clear();
+    gen_isEtaPrime2MuMuGamma.clear();
+    gen_isOmega2MuMu.clear();
+    gen_isOmega2Pi0MuMu.clear();
+    gen_isRho2MuMu.clear();
+    gen_isPhi2MuMu.clear();
+    gen_isPhi2KK.clear();
+    
+    gen_matchedDaughtersIDs.clear();
+    gen_matchedPhotonPt.clear();
+    gen_matchedPhotonEta.clear();
+    gen_matchedPhotonPhi.clear();
+
+    tree->Fill();
+  } else if (fillGenTree) {
+    mumu_mass = -1;
+    mumu_pt = -1;
+    mumu_deltaR = -1;
+    for (int ii = 0; ii < 2; ii++) {
+      mu_pt[ii] = -1;
+      mu_eta[ii] = -1;
+      mu_phi[ii] = -1;
+      mu_pfIso[ii] = -1;
+      mu_segmentCompatibility[ii] = -1;
+      mu_chi2LocalMomentum[ii] = -1;
+      mu_chi2LocalPosition[ii] = -1;
+      mu_glbTrackProbability[ii] = -1;
+      mu_iValidFraction[ii] = -1;
+      mu_layersWithMeasurement[ii] = -1;
+      mu_trkKink[ii] = -1;
+      mu_log2PlusGlbKink[ii] = -1;
+      mu_timeAtIpInOutErr[ii] = -1;
+      mu_outerChi2[ii] = -1;
+      mu_innerChi2[ii] = -1;
+      mu_trkRelChi2[ii] = -1;
+      mu_vMuonHitComb[ii] = -1;
+      mu_qProd[ii] = -1;
+      mu_mva[ii] = -1;
+      mu_dxy[ii] = -1;
+      mu_dz[ii] = -1;
+      mu_trkChi2[ii] = -1;
+      mu_trkNdof[ii] = -1;
+    }
+    vtx_prob = -1;
+    vtx_pos[0] = -1; vtx_pos[1] = -1; vtx_pos[2] = -1;
+    vtx_posError[0] = -1; vtx_posError[1] = -1; vtx_posError[2] = -1;
+    vtx_chi2 = -1;
+    npv = -1;
+    pv_pos[0] = -1; pv_pos[1] = -1; pv_pos[2] = -1;
+
+    mu_ID[0].clear();
+    mu_ID[1].clear();
+    l1Result_.clear();
+    hltResult_.clear();
+
+    slimmedPhoton_pt.clear();
+    slimmedPhoton_eta.clear();
+    slimmedPhoton_phi.clear();
+    slimmedPhoton_mass.clear();
+    slimmedPhoton_sigmaIetaIeta.clear();
+    slimmedPhoton_hOverE.clear();
+    slimmedPhoton_ecalIso.clear();
+    slimmedPhoton_hcalIso.clear();
+    slimmedPhoton_trkIso.clear();
+    slimmedPhoton_r9.clear();
+
+    pfCandPhoton_deltaR.clear();
+    pfCandPhoton_iso.clear();
+    pfCandPhoton_pt.clear();
+    pfCandPhoton_eta.clear();
+    pfCandPhoton_phi.clear();
+    pfCandPhoton_energy.clear();
+    pfCandPhoton_et.clear();
+    pfCandPhoton_et2.clear();
+
     tree->Fill();
   }
 }
@@ -808,43 +921,6 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("mu2_trkChi2"          , &mu_trkChi2[1]                  , "mu2_trkChi2/F"  );
     tree->Branch("mu2_trkNdof"          , &mu_trkNdof[1]                  , "mu2_trkNdof/F"  );
 
-    tree->Branch("motherID1"              , &motherID[0]                     , "motherID1/I"  );
-    tree->Branch("motherID2"              , &motherID[1]                      , "motherID2/I" );
-    tree->Branch("simType1"              , &simType[0]                      , "simType1/I"  );
-    tree->Branch("simType2"              , &simType[1]                      , "simType2/I"  );
-    tree->Branch("simExtType1"              , &simExtType[0]                      , "simExtType1/I"  );
-    tree->Branch("simExtType2"              , &simExtType[1]                      , "simExtType2/I"  );
-
-    tree->Branch("matchedGenIdx"              , &matchedGenIdx                    , "matchedGenIdx/I"  );
-
-    tree->Branch("gen_motherID", "std::vector<int>", &gen_motherID, 32000, 0);
-    tree->Branch("gen_mumu_mass", "std::vector<float>", &gen_mumu_mass, 32000, 0);
-
-    tree->Branch("gen_mu1_pt", "std::vector<float>", &gen_mu_pt[0], 32000, 0);
-    tree->Branch("gen_mu1_eta", "std::vector<float>", &gen_mu_eta[0], 32000, 0);
-    tree->Branch("gen_mu1_phi", "std::vector<float>", &gen_mu_phi[0], 32000, 0);
-    tree->Branch("gen_mu1_recoMatch", "std::vector<bool>", &gen_mu_recoMatch[0], 32000, 0);
-
-    tree->Branch("gen_mu2_pt", "std::vector<float>", &gen_mu_pt[1], 32000, 0);
-    tree->Branch("gen_mu2_eta", "std::vector<float>", &gen_mu_eta[1], 32000, 0);
-    tree->Branch("gen_mu2_phi", "std::vector<float>", &gen_mu_phi[1], 32000, 0);
-    tree->Branch("gen_mu2_recoMatch", "std::vector<bool>", &gen_mu_recoMatch[1], 32000, 0);
-
-    tree->Branch("gen_matchedDaughtersIDs", "std::vector<std::vector<int> >", &gen_matchedDaughtersIDs, 32000, 0);
-    tree->Branch("gen_matchedPhotonPt", "std::vector<std::vector<float> >", &gen_matchedPhotonPt, 32000, 0);
-    tree->Branch("gen_matchedPhotonEta", "std::vector<std::vector<float> >", &gen_matchedPhotonEta, 32000, 0);
-    tree->Branch("gen_matchedPhotonPhi", "std::vector<std::vector<float> >", &gen_matchedPhotonPhi, 32000, 0);
-
-    tree->Branch("gen_isEta2MuMu", "std::vector<bool>", &gen_isEta2MuMu, 32000, 0);
-    tree->Branch("gen_isEta2MuMuGamma", "std::vector<bool>", &gen_isEta2MuMuGamma, 32000, 0);
-    tree->Branch("gen_isEtaPrime2MuMu", "std::vector<bool>", &gen_isEtaPrime2MuMu, 32000, 0);
-    tree->Branch("gen_isEtaPrime2MuMuGamma", "std::vector<bool>", &gen_isEtaPrime2MuMuGamma, 32000, 0);
-    tree->Branch("gen_isOmega2MuMu", "std::vector<bool>", &gen_isOmega2MuMu, 32000, 0);
-    tree->Branch("gen_isOmega2Pi0MuMu", "std::vector<bool>", &gen_isOmega2Pi0MuMu, 32000, 0);
-    tree->Branch("gen_isRho2MuMu", "std::vector<bool>", &gen_isRho2MuMu, 32000, 0);
-    tree->Branch("gen_isPhi2MuMu", "std::vector<bool>", &gen_isPhi2MuMu, 32000, 0);
-    tree->Branch("gen_isPhi2KK", "std::vector<bool>", &gen_isPhi2KK, 32000, 0);
-
     //tree->Branch("rho"                 , &rho                         , "rho/F"     );
 
     tree->Branch("probVtx"            , &vtx_prob                      , "probVtx/F"  );
@@ -886,6 +962,43 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("pfCandPhoton_energy", "std::vector<float>", &pfCandPhoton_energy, 32000, 0);
     tree->Branch("pfCandPhoton_et", "std::vector<float>", &pfCandPhoton_et, 32000, 0);
     tree->Branch("pfCandPhoton_et2", "std::vector<float>", &pfCandPhoton_et2, 32000, 0);
+
+    tree->Branch("motherID1"              , &motherID[0]                     , "motherID1/I"  );
+    tree->Branch("motherID2"              , &motherID[1]                      , "motherID2/I" );
+    tree->Branch("simType1"              , &simType[0]                      , "simType1/I"  );
+    tree->Branch("simType2"              , &simType[1]                      , "simType2/I"  );
+    tree->Branch("simExtType1"              , &simExtType[0]                      , "simExtType1/I"  );
+    tree->Branch("simExtType2"              , &simExtType[1]                      , "simExtType2/I"  );
+
+    tree->Branch("matchedGenIdx"              , &matchedGenIdx                    , "matchedGenIdx/I"  );
+
+    tree->Branch("gen_motherID", "std::vector<int>", &gen_motherID, 32000, 0);
+    tree->Branch("gen_mumu_mass", "std::vector<float>", &gen_mumu_mass, 32000, 0);
+
+    tree->Branch("gen_mu1_pt", "std::vector<float>", &gen_mu_pt[0], 32000, 0);
+    tree->Branch("gen_mu1_eta", "std::vector<float>", &gen_mu_eta[0], 32000, 0);
+    tree->Branch("gen_mu1_phi", "std::vector<float>", &gen_mu_phi[0], 32000, 0);
+    tree->Branch("gen_mu1_recoMatch", "std::vector<bool>", &gen_mu_recoMatch[0], 32000, 0);
+
+    tree->Branch("gen_mu2_pt", "std::vector<float>", &gen_mu_pt[1], 32000, 0);
+    tree->Branch("gen_mu2_eta", "std::vector<float>", &gen_mu_eta[1], 32000, 0);
+    tree->Branch("gen_mu2_phi", "std::vector<float>", &gen_mu_phi[1], 32000, 0);
+    tree->Branch("gen_mu2_recoMatch", "std::vector<bool>", &gen_mu_recoMatch[1], 32000, 0);
+
+    tree->Branch("gen_matchedDaughtersIDs", "std::vector<std::vector<int> >", &gen_matchedDaughtersIDs, 32000, 0);
+    tree->Branch("gen_matchedPhotonPt", "std::vector<std::vector<float> >", &gen_matchedPhotonPt, 32000, 0);
+    tree->Branch("gen_matchedPhotonEta", "std::vector<std::vector<float> >", &gen_matchedPhotonEta, 32000, 0);
+    tree->Branch("gen_matchedPhotonPhi", "std::vector<std::vector<float> >", &gen_matchedPhotonPhi, 32000, 0);
+
+    tree->Branch("gen_isEta2MuMu", "std::vector<bool>", &gen_isEta2MuMu, 32000, 0);
+    tree->Branch("gen_isEta2MuMuGamma", "std::vector<bool>", &gen_isEta2MuMuGamma, 32000, 0);
+    tree->Branch("gen_isEtaPrime2MuMu", "std::vector<bool>", &gen_isEtaPrime2MuMu, 32000, 0);
+    tree->Branch("gen_isEtaPrime2MuMuGamma", "std::vector<bool>", &gen_isEtaPrime2MuMuGamma, 32000, 0);
+    tree->Branch("gen_isOmega2MuMu", "std::vector<bool>", &gen_isOmega2MuMu, 32000, 0);
+    tree->Branch("gen_isOmega2Pi0MuMu", "std::vector<bool>", &gen_isOmega2Pi0MuMu, 32000, 0);
+    tree->Branch("gen_isRho2MuMu", "std::vector<bool>", &gen_isRho2MuMu, 32000, 0);
+    tree->Branch("gen_isPhi2MuMu", "std::vector<bool>", &gen_isPhi2MuMu, 32000, 0);
+    tree->Branch("gen_isPhi2KK", "std::vector<bool>", &gen_isPhi2KK, 32000, 0);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
