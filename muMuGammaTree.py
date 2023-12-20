@@ -10,7 +10,7 @@ process.MessageLogger.cerr.FwkSummary.reportEvery = 1000
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100000)
+    input = cms.untracked.int32(1000000)
 )
 
 dir = "root://xrootd-cms.infn.it//"

@@ -218,6 +218,7 @@ private:
   std::vector<float> pfCandPhoton_et;
   std::vector<float> pfCandPhoton_et2;
 
+  /*
   // doGEN variables
   int motherID[2];
   int motherGenID;
@@ -239,6 +240,35 @@ private:
   // bool isRho2Pi0MuMu; //not observed?
   bool isPhi2MuMu;
   bool isPhi2KK;
+  */
+
+  int motherID[2];
+  int simType[2];
+  int simExtType[2];
+  int matchedGenIdx;
+
+  std::vector< std::vector<int> > gen_matchedDaughtersIDs;
+  std::vector< std::vector<float> > gen_matchedPhotonPt;
+  std::vector< std::vector<float> > gen_matchedPhotonEta;
+  std::vector< std::vector<float> > gen_matchedPhotonPhi;
+
+  std::vector<int> gen_motherID;
+  std::vector<float> gen_mumu_mass;
+  std::vector<float> gen_mu_pt[2];
+  std::vector<float> gen_mu_eta[2];
+  std::vector<float> gen_mu_phi[2];
+  std::vector<bool> gen_mu_recoMatch[2];
+
+  std::vector<bool> gen_isEta2MuMu;
+  std::vector<bool> gen_isEta2MuMuGamma;
+  std::vector<bool> gen_isEtaPrime2MuMu;
+  std::vector<bool> gen_isEtaPrime2MuMuGamma;
+  std::vector<bool> gen_isOmega2MuMu;
+  std::vector<bool> gen_isOmega2Pi0MuMu;
+  std::vector<bool> gen_isRho2MuMu;
+  // std::vector<bool> isRho2Pi0MuMu;
+  std::vector<bool> gen_isPhi2MuMu;
+  std::vector<bool> gen_isPhi2KK;
 };
 
 //
@@ -536,7 +566,6 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
         for (size_t i = 0; i < triggerPathsVector.size(); i++) {
             hltResult_.push_back(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]));
         }
-
       }
     }
   }
@@ -551,17 +580,48 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
       simExtType[1]=muonsH->at(mu_idx[1]).simExtType();
     }
 
-    motherGenID = 0; 
-    genID[0] = 0; genID[1] = 0;
-    isEta2MuMu            = false;
-    isEta2MuMuGamma       = false;
-    isEtaPrime2MuMu       = false;
-    isEtaPrime2MuMuGamma  = false;
-    isOmega2MuMu         = false;
-    isOmega2Pi0MuMu       = false;
-    isRho2MuMu            = false;
-    isPhi2MuMu            = false;
-    isPhi2KK              = false;
+    gen_motherID.clear();
+    matchedGenIdx = -1;
+    gen_reco_match[0].clear();
+    gen_reco_match[1].clear();
+
+    gen_mumu_mass.clear();
+    gen_mu_pt[0].clear();
+    gen_mu_pt[1].clear();
+    gen_mu_eta[0].clear();
+    gen_mu_eta[1].clear();
+    gen_mu_phi[0].clear();
+    gen_mu_phi[1].clear();
+
+    gen_isEta2MuMu.clear();
+    gen_isEta2MuMuGamma.clear();
+    gen_isEtaPrime2MuMu.clear();
+    gen_isEtaPrime2MuMuGamma.clear();
+    gen_isOmega2MuMu.clear();
+    gen_isOmega2Pi0MuMu.clear();
+    gen_isRho2MuMu.clear();
+    gen_isPhi2MuMu.clear();
+    gen_isPhi2KK.clear();
+
+    bool isEta2MuMu            = false;
+    bool isEta2MuMuGamma       = false;
+    bool isEtaPrime2MuMu       = false;
+    bool isEtaPrime2MuMuGamma  = false;
+    bool isOmega2MuMu          = false;
+    bool isOmega2Pi0MuMu       = false;
+    bool isRho2MuMu            = false;
+    bool isPhi2MuMu            = false;
+    bool isPhi2KK              = false;
+
+    gen_matchedDaughtersIDs.clear();
+    gen_matchedPhotonPt.clear();
+    gen_matchedPhotonEta.clear();
+    gen_matchedPhotonPhi.clear();
+
+    std::vector<int> matchedDaughterIDs;
+    std::vector<float> matchedPhotonPt;
+    std::vector<float> matchedPhotonEta;
+    std::vector<float> matchedPhotonPhi;
 
     Handle<vector<reco::GenParticle> > prunedGenParticles;
     iEvent.getByToken(prunedGenToken, prunedGenParticles);
@@ -590,23 +650,45 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
 
         }
         if (nDaughterMuons==2) {
+          matchedDaughtersIDs.clear();
           test++;
           std::cout<<"test"<<test<<std::endl;
           // try to match pair of reco muons with a pair of daughters
           auto daught_mup =  &(*genp->daughter(mup_idx));
           auto daught_mum =  &(*genp->daughter(mum_idx));
-
-          matchedDaughtersIDs.clear();
+          
           // std::cout<<"Mother with 2 muons ID == " << genp->pdgId() <<std::endl;
           for (int i=0; i<(int)genp->numberOfDaughters(); ++i) {
             matchedDaughtersIDs.push_back(genp->daughter(i)->pdgId());
             // std::cout<<"Daughter "<< i << "  ID == " << genp->daughter(i)->pdgId()<<std::endl;
           }
+          gen_matchedDaughtersIDs.push_back(matchedDaughtersIDs);
 
-          if ( doFullGEN or (fillTree and (isMatched(daught_mup, &mu_v[1], mu_mass) and isMatched(daught_mum, &mu_v[0], mu_mass))) ){
-            motherGenID = genp->pdgId();
-            genID[1] = daught_mup->pdgId();
-            genID[0] = daught_mum->pdgId();
+          bool isMatched1 = false;
+          bool isMatched2 = false;
+          if (fillTree) {
+            isMatched1 = isMatched(daught_mup, &mu_v[1], mu_mass);
+            isMatched2 = isMatched(daught_mum, &mu_v[0], mu_mass);
+          }
+
+          if ( doFullGEN or ( isMatched1 and isMatched2 ) ){
+
+            if (isMatched1 and isMatched2) matchedGenIdx = gen_motherID.size();
+
+            gen_reco_match[0].push_back(isMatched1);
+            gen_reco_match[1].push_back(isMatched2);
+
+            gen_motherID.push_back(genp->pdgId());
+
+            std::cout << (daught_mup + daught_mum).M() << std::endl;
+            gen_mumu_mass.push_back((daught_mup + daught_mum).M());
+            gen_mu_pt[0].push_back(daught_mum->pt());
+            gen_mu_pt[1].push_back(daught_mup->pt());
+            gen_mu_eta[0].push_back(daught_mum->eta());
+            gen_mu_eta[1].push_back(daught_mup->eta());
+            gen_mu_phi[0].push_back(daught_mum->phi());
+            gen_mu_phi[1].push_back(daught_mup->phi());
+
             // std::cout<<"Matched "<< daught_mup->pt() << "  " << mup_reco->Pt() << "  " << daught_mum->pt() << "  " << mum_reco->Pt() << "for mother ID == " << motherGenID <<std::endl;
             //check for photons
             int nPhotons = 0;
@@ -619,13 +701,15 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
               const reco::Candidate* pgpPtr = &(*pgp);
               if (pgp->pdgId()==22 and isAncestor( &(*genp) , pgpPtr)) {
                   std::cout<<"packed photon "<<pgp->pt()<<" mother pt: "<<pgp->motherRef()->pt()<<std::endl;
-                  matchedPhotonPt.push_back( pgp->pt());
-                  matchedPhotonEta.push_back( pgp->eta());
-                  matchedPhotonPhi.push_back( pgp->phi());
-                  nPhotons++;
-                  
+                  matchedPhotonPt.push_back( pgp->pt() );
+                  matchedPhotonEta.push_back( pgp->eta() );
+                  matchedPhotonPhi.push_back( pgp->phi() );
+                  nPhotons++;   
               }
             }
+            gen_matchedPhotonPt.push_back(matchedPhotonPt);
+            gen_matchedPhotonEta.push_back(matchedPhotonEta);
+            gen_matchedPhotonPhi.push_back(matchedPhotonPhi);
             bool aPi0 = false;
             // check if 2 photons make a pi0
             if (nPhotons == 2){
@@ -641,6 +725,16 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             else if ((abs(genp->pdgId()) == 223) and aPi0)    isOmega2Pi0MuMu = true;      
             else if ((abs(genp->pdgId()) == 113) and (nPhotons == 0)) isRho2MuMu = true;
             else if ((abs(genp->pdgId()) == 333) and (nPhotons == 0)) isPhi2MuMu = true;
+
+            gen_isEta2MuMu.push_back(isEta2MuMu);
+            gen_isEta2MuMuGamma.push_back(isEta2MuMuGamma);
+            gen_isEtaPrime2MuMu.push_back(isEtaPrime2MuMu);
+            gen_isEtaPrime2MuMuGamma.push_back(isEtaPrime2MuMuGamma);
+            gen_isOmega2MuMu.push_back(isOmega2MuMu);
+            gen_isOmega2Pi0MuMu.push_back(isOmega2Pi0MuMu);
+            gen_isRho2MuMu.push_back(isRho2MuMu);
+            gen_isPhi2MuMu.push_back(isPhi2MuMu);
+            gen_isPhi2KK.push_back(isPhi2KK);
           }
         }
       }
@@ -658,80 +752,98 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("lumiSec"             , &lumiSec                     , "lumiSec/I");
     tree->Branch("runNum"              , &runNum                      , "runNum/I");
 
-    tree->Branch("mass"                , &mumu_mass                        , "mass/F"    );
-    tree->Branch("pt"                  , &mumu_pt                          , "pt/F"      );
-    tree->Branch("dr"                  , &mumu_deltaR                          , "dr/F"      );
-    tree->Branch("pt1"                 , &mu_pt[0]                         , "pt1/F"     );
-    tree->Branch("pt2"                 , &mu_pt[1]                         , "pt2/F"     );
-    tree->Branch("eta1"                , &mu_eta[0]                        , "eta1/F"    );
-    tree->Branch("eta2"                , &mu_eta[1]                        , "eta2/F"    );
-    tree->Branch("phi1"                , &mu_phi[0]                        , "phi1/F"    );
-    tree->Branch("phi2"                , &mu_phi[1]                        , "phi2/F"    );
-    tree->Branch("pfIso1"              , &mu_pfIso[0]                      , "pfIso1/F"  );
-    tree->Branch("pfIso2"              , &mu_pfIso[1]                      , "pfIso2/F"  );
+    tree->Branch("mumu_mass"                , &mumu_mass                        , "mumu_mass/F"    );
+    tree->Branch("mumu_pt"                  , &mumu_pt                          , "mumu_pt/F"      );
+    tree->Branch("mumu_deltaR"              , &mumu_deltaR                      , "mumu_deltaR/F"      );
 
-    tree->Branch("segmentCompatibility1",     &mu_segmentCompatibility[0],     "segmentCompatibility1/F"   );
-    tree->Branch("chi2LocalMomentum1",        &mu_chi2LocalMomentum[0],        "chi2LocalMomentum1/F"      );
-    tree->Branch("chi2LocalPosition1",        &mu_chi2LocalPosition[0],        "chi2LocalPosition1/F"      );
-    tree->Branch("glbTrackProbability1",      &mu_glbTrackProbability[0],      "glbTrackProbability1/F"    );
-    tree->Branch("iValidFraction1",           &mu_iValidFraction[0],           "iValidFraction1/F"         );
-    tree->Branch("layersWithMeasurement1",    &mu_layersWithMeasurement[0],    "layersWithMeasurement1/F"  );
-    tree->Branch("trkKink1",                  &mu_trkKink[0],                  "trkKink1/F"                );
-    tree->Branch("log2PlusGlbKink1",          &mu_log2PlusGlbKink[0],          "log2PlusGlbKink1/F"        );
-    tree->Branch("timeAtIpInOutErr1",         &mu_timeAtIpInOutErr[0],         "timeAtIpInOutErr1/F"       );
-    tree->Branch("outerChi21",                &mu_outerChi2[0],                "outerChi21/F"              );
-    tree->Branch("innerChi21",                &mu_innerChi2[0],                "innerChi21/F"              );
-    tree->Branch("trkRelChi21",               &mu_trkRelChi2[0],               "trkRelChi21/F"             );
-    tree->Branch("vMuonHitComb1",             &mu_vMuonHitComb[0],             "vMuonHitComb1/F"           );
-    tree->Branch("qProd1",                    &mu_qProd[0],                    "qProd1/F"                  );
-    tree->Branch("mva1",                      &mu_mva[0],                      "mva1/F"                    );
+    tree->Branch("mu1_pt"                 , &mu_pt[0]                         , "mu1_pt/F"     );
+    tree->Branch("mu1_eta"                , &mu_eta[0]                        , "mu1_eta/F"    );
+    tree->Branch("mu1_phi"                , &mu_phi[0]                        , "mu1_phi/F"    );
+    tree->Branch("mu1_pfIso"              , &mu_pfIso[0]                      , "mu1_pfIso/F"  );
 
-    tree->Branch("segmentCompatibility2",     &mu_segmentCompatibility[1],     "segmentCompatibility2/F"   );
-    tree->Branch("chi2LocalMomentum2",        &mu_chi2LocalMomentum[1],        "chi2LocalMomentum2/F"      );
-    tree->Branch("chi2LocalPosition2",        &mu_chi2LocalPosition[1],        "chi2LocalPosition2/F"      );
-    tree->Branch("glbTrackProbability2",      &mu_glbTrackProbability[1],      "glbTrackProbability2/F"    );
-    tree->Branch("iValidFraction2",           &mu_iValidFraction[1],           "iValidFraction2/F"         );
-    tree->Branch("layersWithMeasurement2",    &mu_layersWithMeasurement[1],    "layersWithMeasurement2/F"  );
-    tree->Branch("trkKink2",                  &mu_trkKink[1],                  "trkKink2/F"                );
-    tree->Branch("log2PlusGlbKink2",          &mu_log2PlusGlbKink[1],          "log2PlusGlbKink2/F"        );
-    tree->Branch("timeAtIpInOutErr2",         &mu_timeAtIpInOutErr[1],         "timeAtIpInOutErr2/F"       );
-    tree->Branch("outerChi22",                &mu_outerChi2[1],                "outerChi22/F"              );
-    tree->Branch("innerChi22",                &mu_innerChi2[1],                "innerChi22/F"              );
-    tree->Branch("trkRelChi22",               &mu_trkRelChi2[1],               "trkRelChi22/F"             );
-    tree->Branch("vMuonHitComb2",             &mu_vMuonHitComb[1],             "vMuonHitComb2/F"           );
-    tree->Branch("qProd2",                    &mu_qProd[1],                    "qProd2/F"                  );
-    tree->Branch("mva2",                      &mu_mva[1],                      "mva2/F"                    );
+    tree->Branch("mu2_pt"                 , &mu_pt[1]                         , "mu2_pt/F"     );
+    tree->Branch("mu2_eta"                , &mu_eta[1]                        , "mu2_eta/F"    );
+    tree->Branch("mu2_phi"                , &mu_phi[1]                        , "mu2_phi/F"    );
+    tree->Branch("mu2_pfIso"              , &mu_pfIso[1]                      , "mu2_pfIso/F"  );
 
-    tree->Branch("dxy1"              , &mu_dxy[0]                      , "dxy1/F"  );
-    tree->Branch("dxy2"              , &mu_dxy[1]                      , "dxy2/F"  );
-    tree->Branch("dz1"              , &mu_dz[0]                      , "dz1/F"  );
-    tree->Branch("dz2"              , &mu_dz[1]                      , "dz2/F"  );
-    tree->Branch("trkChi21"              , &mu_trkChi2[0]                      , "trkChi21/F"  );
-    tree->Branch("trkChi22"              , &mu_trkChi2[1]                      , "trkChi22/F"  );
-    tree->Branch("trkNdof1"              , &mu_trkNdof[0]                      , "trkNdof1/F"  );
-    tree->Branch("trkNdof2"              , &mu_trkNdof[1]                      , "trkNdof2/F"  );
+    tree->Branch("mu1_segmentCompatibility",     &mu_segmentCompatibility[0],     "mu1_segmentCompatibility/F"   );
+    tree->Branch("mu1_chi2LocalMomentum",        &mu_chi2LocalMomentum[0],        "mu1_chi2LocalMomentum/F"      );
+    tree->Branch("mu1_chi2LocalPosition",        &mu_chi2LocalPosition[0],        "mu1_chi2LocalPosition/F"      );
+    tree->Branch("mu1_glbTrackProbability",      &mu_glbTrackProbability[0],      "mu1_glbTrackProbability/F"    );
+    tree->Branch("mu1_iValidFraction",           &mu_iValidFraction[0],           "mu1_iValidFraction/F"         );
+    tree->Branch("mu1_layersWithMeasurement",    &mu_layersWithMeasurement[0],    "mu1_layersWithMeasurement/F"  );
+    tree->Branch("mu1_trkKink",                  &mu_trkKink[0],                  "mu1_trkKink/F"                );
+    tree->Branch("mu1_log2PlusGlbKink",          &mu_log2PlusGlbKink[0],          "mu1_log2PlusGlbKink/F"        );
+    tree->Branch("mu1_timeAtIpInOutErr",         &mu_timeAtIpInOutErr[0],         "mu1_timeAtIpInOutErr/F"       );
+    tree->Branch("mu1_outerChi2",                &mu_outerChi2[0],                "mu1_outerChi2/F"              );
+    tree->Branch("mu1_innerChi2",                &mu_innerChi2[0],                "mu1_innerChi2/F"              );
+    tree->Branch("mu1_trkRelChi2",               &mu_trkRelChi2[0],               "mu1_trkRelChi2/F"             );
+    tree->Branch("mu1_vMuonHitComb",             &mu_vMuonHitComb[0],             "mu1_vMuonHitComb/F"           );
+    tree->Branch("mu1_qProd",                    &mu_qProd[0],                    "mu1_qProd/F"                  );
+    tree->Branch("mu1_mva",                      &mu_mva[0],                      "mu1_mva/F"                    );
+
+    tree->Branch("mu2_segmentCompatibility",     &mu_segmentCompatibility[1],     "mu2_segmentCompatibility/F"   );
+    tree->Branch("mu2_chi2LocalMomentum",        &mu_chi2LocalMomentum[1],        "mu2_chi2LocalMomentum/F"      );
+    tree->Branch("mu2_chi2LocalPosition",        &mu_chi2LocalPosition[1],        "mu2_chi2LocalPosition/F"      );
+    tree->Branch("mu2_glbTrackProbability",      &mu_glbTrackProbability[1],      "mu2_glbTrackProbability/F"    );
+    tree->Branch("mu2_iValidFraction",           &mu_iValidFraction[1],           "mu2_iValidFraction/F"         );
+    tree->Branch("mu2_layersWithMeasurement",    &mu_layersWithMeasurement[1],    "mu2_layersWithMeasurement/F"  );
+    tree->Branch("mu2_trkKink",                  &mu_trkKink[1],                  "mu2_trkKink/F"                );
+    tree->Branch("mu2_log2PlusGlbKink",          &mu_log2PlusGlbKink[1],          "mu2_log2PlusGlbKink/F"        );
+    tree->Branch("mu2_timeAtIpInOutErr",         &mu_timeAtIpInOutErr[1],         "mu2_timeAtIpInOutErr/F"       );
+    tree->Branch("mu2_outerChi2",                &mu_outerChi2[1],                "mu2_outerChi2/F"              );
+    tree->Branch("mu2_innerChi2",                &mu_innerChi2[1],                "mu2_innerChi2/F"              );
+    tree->Branch("mu2_trkRelChi2",               &mu_trkRelChi2[1],               "mu2_trkRelChi2/F"             );
+    tree->Branch("mu2_vMuonHitComb",             &mu_vMuonHitComb[1],             "mu2_vMuonHitComb/F"           );
+    tree->Branch("mu2_qProd",                    &mu_qProd[1],                    "mu2_qProd/F"                  );
+    tree->Branch("mu2_mva",                      &mu_mva[1],                      "mu2_mva/F"                    );
+
+    tree->Branch("mu1_dxy"              , &mu_dxy[0]                      , "mu1_dxy/F"  );
+    tree->Branch("mu1_dz"               , &mu_dz[0]                       , "mu1_dz/F"  );
+    tree->Branch("mu1_trkChi2"          , &mu_trkChi2[0]                  , "mu1_trkChi2/F"  );
+    tree->Branch("mu1_trkNdof"          , &mu_trkNdof[0]                  , "mu1_trkNdof/F"  );
+    
+    tree->Branch("mu2_dxy"              , &mu_dxy[1]                      , "mu2_dxy/F"  );
+    tree->Branch("mu2_dz"               , &mu_dz[1]                       , "mu2_dz/F"  );
+    tree->Branch("mu2_trkChi2"          , &mu_trkChi2[1]                  , "mu2_trkChi2/F"  );
+    tree->Branch("mu2_trkNdof"          , &mu_trkNdof[1]                  , "mu2_trkNdof/F"  );
 
     tree->Branch("motherID1"              , &motherID[0]                     , "motherID1/I"  );
-    tree->Branch("motherID2"              , &motherID[1]                      , "motherID2/I"  );
+    tree->Branch("motherID2"              , &motherID[1]                      , "motherID2/I" );
     tree->Branch("simType1"              , &simType[0]                      , "simType1/I"  );
     tree->Branch("simType2"              , &simType[1]                      , "simType2/I"  );
     tree->Branch("simExtType1"              , &simExtType[0]                      , "simExtType1/I"  );
     tree->Branch("simExtType2"              , &simExtType[1]                      , "simExtType2/I"  );
 
-    tree->Branch("matchedDaughtersIDs", "std::vector<int>", &matchedDaughtersIDs, 32000, 0);
-    tree->Branch("matchedPhotonPt"              , &matchedPhotonPt                      , "matchedPhotonPt/F"  );
-    tree->Branch("matchedPhotonEta"              , &matchedPhotonEta                      , "matchedPhotonEta/F"  );
-    tree->Branch("matchedPhotonPhi"              , &matchedPhotonPhi                      , "matchedPhotonPhi/F"  );
+    tree->Branch("matchedGenIdx"              , &matchedGenIdx                    , "matchedGenIdx/I"  );
 
-    tree->Branch("isEta2MuMu",               &isEta2MuMu,             "isEta2MuMu/b");    
-    tree->Branch("isEta2MuMuGamma",          &isEta2MuMuGamma,            "isEta2MuMuGamma/b");
-    tree->Branch("isEtaPrime2MuMu",          &isEtaPrime2MuMu,            "isEtaPrime2MuMu/b");
-    tree->Branch("isEtaPrime2MuMuGamma",     &isEtaPrime2MuMuGamma,             "isEtaPrime2MuMuGamma/b");
-    tree->Branch("isOmega2MuMu",             &isOmega2MuMu,             "isOmega2MuMu/b");
-    tree->Branch("isOmega2Pi0MuMu",          &isOmega2Pi0MuMu,            "isOmega2Pi0MuMu/b");
-    tree->Branch("isRho2MuMu",               &isRho2MuMu,             "isRho2MuMu/b");
-    tree->Branch("isPhi2MuMu",               &isPhi2MuMu,             "isPhi2MuMu/b");
-    tree->Branch("isPhi2KK",                 &isPhi2KK,             "isPhi2KK/b");
+    tree->Branch("gen_motherID", "std::vector<int>", &gen_motherID, 32000, 0);
+    tree->Branch("gen_mumu_mass", "std::vector<float>", &gen_mumu_mass, 32000, 0);
+
+    tree->Branch("gen_mu1_pt", "std::vector<float>", &gen_mu_pt[0], 32000, 0);
+    tree->Branch("gen_mu1_eta", "std::vector<float>", &gen_mu_eta[0], 32000, 0);
+    tree->Branch("gen_mu1_phi", "std::vector<float>", &gen_mu_phi[0], 32000, 0);
+    tree->Branch("gen_mu1_recoMatch", "std::vector<bool>", &gen_mu_recoMatch[0], 32000, 0);
+
+    tree->Branch("gen_mu2_pt", "std::vector<float>", &gen_mu_pt[1], 32000, 0);
+    tree->Branch("gen_mu2_eta", "std::vector<float>", &gen_mu_eta[1], 32000, 0);
+    tree->Branch("gen_mu2_phi", "std::vector<float>", &gen_mu_phi[1], 32000, 0);
+    tree->Branch("gen_mu2_recoMatch", "std::vector<bool>", &gen_mu_recoMatch[1], 32000, 0);
+
+    tree->Branch("gen_matchedDaughtersIDs", "std::vector<std::vector<int> >", &gen_matchedDaughtersIDs, 32000, 0);
+    tree->Branch("gen_matchedPhotonPt", "std::vector<std::vector<float> >", &gen_matchedPhotonPt, 32000, 0);
+    tree->Branch("gen_matchedPhotonEta", "std::vector<std::vector<float> >", &gen_matchedPhotonEta, 32000, 0);
+    tree->Branch("gen_matchedPhotonPhi", "std::vector<std::vector<float> >", &gen_matchedPhotonPhi, 32000, 0);
+
+    tree->Branch("gen_isEta2MuMu", "std::vector<bool>", &gen_isEta2MuMu, 32000, 0);
+    tree->Branch("gen_isEta2MuMuGamma", "std::vector<bool>", &gen_isEta2MuMuGamma, 32000, 0);
+    tree->Branch("gen_isEtaPrime2MuMu", "std::vector<bool>", &gen_isEtaPrime2MuMu, 32000, 0);
+    tree->Branch("gen_isEtaPrime2MuMuGamma", "std::vector<bool>", &gen_isEtaPrime2MuMuGamma, 32000, 0);
+    tree->Branch("gen_isOmega2MuMu", "std::vector<bool>", &gen_isOmega2MuMu, 32000, 0);
+    tree->Branch("gen_isOmega2Pi0MuMu", "std::vector<bool>", &gen_isOmega2Pi0MuMu, 32000, 0);
+    tree->Branch("gen_isRho2MuMu", "std::vector<bool>", &gen_isRho2MuMu, 32000, 0);
+    tree->Branch("gen_isPhi2MuMu", "std::vector<bool>", &gen_isPhi2MuMu, 32000, 0);
+    tree->Branch("gen_isPhi2KK", "std::vector<bool>", &gen_isPhi2KK, 32000, 0);
 
     //tree->Branch("rho"                 , &rho                         , "rho/F"     );
 
@@ -749,31 +861,31 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("pvY"                , &pv_pos[1]                          , "pvY/F"  );
     tree->Branch("pvZ"                , &pv_pos[2]                          , "pvZ/F"  );
 
-    tree->Branch("muonID1", "std::vector<bool>", &mu_ID[0], 32000, 0);
-    tree->Branch("muonID2", "std::vector<bool>", &mu_ID[1], 32000, 0);
+    tree->Branch("mu1_ID", "std::vector<bool>", &mu_ID[0], 32000, 0);
+    tree->Branch("mu2_ID", "std::vector<bool>", &mu_ID[1], 32000, 0);
 
     tree->Branch("l1Result", "std::vector<bool>"             ,&l1Result_, 32000, 0  );
     tree->Branch("hltResult", "std::vector<bool>"             ,&hltResult_, 32000, 0  );
 
-    tree->Branch("slimmedPhotonPt", "std::vector<float>", &slimmedPhoton_pt, 32000, 0);
-    tree->Branch("slimmedPhotonEta", "std::vector<float>", &slimmedPhoton_eta, 32000, 0);
-    tree->Branch("slimmedPhotonPhi", "std::vector<float>", &slimmedPhoton_phi, 32000, 0);
-    tree->Branch("slimmedPhotonM", "std::vector<float>", &slimmedPhoton_mass, 32000, 0);
-    tree->Branch("slimmedPhotonSigmaIetaIeta", "std::vector<float>", &slimmedPhoton_sigmaIetaIeta, 32000, 0);
-    tree->Branch("slimmedPhotonHOverE", "std::vector<float>", &slimmedPhoton_hOverE, 32000, 0);
-    tree->Branch("slimmedPhotonEcalIso", "std::vector<float>", &slimmedPhoton_ecalIso, 32000, 0);
-    tree->Branch("slimmedPhotonHcalIso", "std::vector<float>", &slimmedPhoton_hcalIso, 32000, 0);
-    tree->Branch("slimmedPhotonTrkIso", "std::vector<float>", &slimmedPhoton_trkIso, 32000, 0);
-    tree->Branch("slimmedPhotonR9", "std::vector<float>", &slimmedPhoton_r9, 32000, 0);
+    tree->Branch("slimmedPhoton_pt", "std::vector<float>", &slimmedPhoton_pt, 32000, 0);
+    tree->Branch("slimmedPhoton_eta", "std::vector<float>", &slimmedPhoton_eta, 32000, 0);
+    tree->Branch("slimmedPhoton_phi", "std::vector<float>", &slimmedPhoton_phi, 32000, 0);
+    tree->Branch("slimmedPhoton_mass", "std::vector<float>", &slimmedPhoton_mass, 32000, 0);
+    tree->Branch("slimmedPhoton_sigmaIetaIeta", "std::vector<float>", &slimmedPhoton_sigmaIetaIeta, 32000, 0);
+    tree->Branch("slimmedPhoton_hOverE", "std::vector<float>", &slimmedPhoton_hOverE, 32000, 0);
+    tree->Branch("slimmedPhoton_ecalIso", "std::vector<float>", &slimmedPhoton_ecalIso, 32000, 0);
+    tree->Branch("slimmedPhoton_hcalIso", "std::vector<float>", &slimmedPhoton_hcalIso, 32000, 0);
+    tree->Branch("slimmedPhoton_trkIso", "std::vector<float>", &slimmedPhoton_trkIso, 32000, 0);
+    tree->Branch("slimmedPhoton_r9", "std::vector<float>", &slimmedPhoton_r9, 32000, 0);
 
-    tree->Branch("pfCandPhotonDr", "std::vector<float>", &pfCandPhoton_deltaR, 32000, 0);
-    tree->Branch("pfCandPhotonIso", "std::vector<float>", &pfCandPhoton_iso, 32000, 0);
-    tree->Branch("pfCandPhotonPt", "std::vector<float>", &pfCandPhoton_pt, 32000, 0);
-    tree->Branch("pfCandPhotonEta", "std::vector<float>", &pfCandPhoton_eta, 32000, 0);
-    tree->Branch("pfCandPhotonPhi", "std::vector<float>", &pfCandPhoton_phi, 32000, 0);
-    tree->Branch("pfCandPhotonEnergy", "std::vector<float>", &pfCandPhoton_energy, 32000, 0);
-    tree->Branch("pfCandPhotonEt", "std::vector<float>", &pfCandPhoton_et, 32000, 0);
-    tree->Branch("pfCandPhotonEt2", "std::vector<float>", &pfCandPhoton_et2, 32000, 0);
+    tree->Branch("pfCandPhoton_deltaR", "std::vector<float>", &pfCandPhoton_deltaR, 32000, 0);
+    tree->Branch("pfCandPhoton_iso", "std::vector<float>", &pfCandPhoton_iso, 32000, 0);
+    tree->Branch("pfCandPhoton_pt", "std::vector<float>", &pfCandPhoton_pt, 32000, 0);
+    tree->Branch("pfCandPhoton_eta", "std::vector<float>", &pfCandPhoton_eta, 32000, 0);
+    tree->Branch("pfCandPhoton_phi", "std::vector<float>", &pfCandPhoton_phi, 32000, 0);
+    tree->Branch("pfCandPhoton_energy", "std::vector<float>", &pfCandPhoton_energy, 32000, 0);
+    tree->Branch("pfCandPhoton_et", "std::vector<float>", &pfCandPhoton_et, 32000, 0);
+    tree->Branch("pfCandPhoton_et2", "std::vector<float>", &pfCandPhoton_et2, 32000, 0);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
