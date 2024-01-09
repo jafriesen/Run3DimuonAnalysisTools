@@ -379,6 +379,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     Handle<vector<reco::Vertex> > primaryVerticesH;
     iEvent.getByToken(primaryVerticesToken, primaryVerticesH);
     npv = primaryVerticesH->size();
+    //std::cout << "npv " << npv << std::endl;
     if ( npv > 0 ) { // check for primary vertex
       pv = *primaryVerticesH->begin();
 
@@ -401,8 +402,8 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
                 //std::cout << "ij " << iMuon << jMuon << "Vertex not valid." << std::endl;
               } else {
                 reco::Vertex currentVtx = reco::Vertex(tv);
-                float currentVtxProb = TMath::Prob( vertex.chi2() , vertex.ndof() );
-
+                float currentVtxProb = TMath::Prob( currentVtx.chi2() , currentVtx.ndof() );
+                //std::cout << "  currentVtxProb " << currentVtxProb << std::endl;
                 if (currentVtxProb > kMinVtxProb && currentVtxProb > bestProbVtx) {
                   vertex = currentVtx;
                   bestProbVtx = currentVtxProb;
@@ -415,8 +416,9 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
           }
         }
       }
-
+      
       if (bestProbVtx > kMinVtxProb) { // will fill tree if true
+        //std::cout<< "fill tree"<<std::endl;
         fillTree = true;
         vtx_prob = bestProbVtx;
         vtx_chi2 = vertex.normalizedChi2();

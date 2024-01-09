@@ -15,7 +15,7 @@ config.Data.inputDBS = 'global'
 #config.Data.outputPrimaryDataset = 'CRAB_UserFiles'
 config.Data.inputDBS = 'global'
 config.Data.splitting = "FileBased"
-config.Data.unitsPerJob = 1
+config.Data.unitsPerJob = 5
 #config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-PromptReco-v1/MINIAOD'
 #config.Data.inputDataset = '/ScoutingPFMonitor/Run2022F-v1/RAW'
 
