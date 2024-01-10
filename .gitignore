@@ -32,3 +32,5 @@
 *.app
 
 *.*~
+Plotting/.DS_Store
+Plotting/Fitting/.DS_Store
