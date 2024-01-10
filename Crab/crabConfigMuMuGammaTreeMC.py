@@ -9,8 +9,7 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'muMuGammaTree.py'
 
 #config.Data.userInputFiles = ['root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700)]+['root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700)]+['root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(3500)]
-config.Data.userInputFiles = ['root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in \
-range(3500)]
+config.Data.userInputFiles = ['root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(3500)]
 config.Data.inputDBS = 'global'
 #config.Data.outputDatasetTag = config.General.requestName
 config.Data.outputDatasetTag = 'skimEtaMuMuGamma_pythiaGun_MINIAOD_pt5to25'
@@ -26,4 +25,4 @@ config.Data.unitsPerJob = 1
 #config.Data.lumiMask = 'Cert_Collisions2022_355100_362760_Golden.json'
 
 # Where the output files will be transmitted to
-config.Site.storageSite = 'T3_CH_CERNBOX'
+config.Site.storageSite = 'T2_US_MIT'

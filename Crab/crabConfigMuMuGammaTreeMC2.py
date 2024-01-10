@@ -19,6 +19,8 @@ config.Data.unitsPerJob = 5
 #config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-PromptReco-v1/MINIAOD'
 #config.Data.inputDataset = '/ScoutingPFMonitor/Run2022F-v1/RAW'
 
+config.Debug.extraJDL = ['+REQUIRED_OS="rhel9"']
+
 # These values only make sense for processing data
 #    Select input data based on a lumi mask
 #config.Data.lumiMask = 'Cert_Collisions2022_355100_362760_Golden.json'
