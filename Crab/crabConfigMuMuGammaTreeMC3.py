@@ -8,7 +8,7 @@ config.JobType.pluginName = 'Analysis'
 # Name of the CMSSW configuration file
 config.JobType.psetName = 'muMuGammaTreeMC.py'
 
-dir = "root://xrootd-cms.infn.it//"
+dir = "root://cmsxrootd.fnal.gov/"
 file_list = open("fileList.txt", "r")
 input_files = []
 for f in file_list :
