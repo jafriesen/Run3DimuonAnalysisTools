@@ -6,7 +6,7 @@ config.General.requestName = 'muMuGammaTree_Run3Summer22MiniAODv3_InclusiveDilep
 
 config.JobType.pluginName = 'Analysis'
 # Name of the CMSSW configuration file
-config.JobType.psetName = 'muMuGammaTree.py'
+config.JobType.psetName = 'muMuGammaTreeMC.py'
 
 config.Data.inputDataset = "/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8/Run3Summer22MiniAODv3-Pilot_124X_mcRun3_2022_realistic_v12-v5/MINIAODSIM"
 config.Data.inputDBS = 'global'
