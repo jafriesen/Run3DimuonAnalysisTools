@@ -8,7 +8,7 @@ config.JobType.pluginName = 'Analysis'
 # Name of the CMSSW configuration file
 config.JobType.psetName = 'muMuGammaTreeMC.py'
 
-dir = "root://cmsxrootd.fnal.gov/"
+dir = "root://xrootd-cms.infn.it//"
 file_list = open("fileList.txt", "r")
 input_files = []
 for f in file_list :
@@ -24,7 +24,7 @@ config.Data.unitsPerJob = 1
 #config.Data.inputDataset = '/ParkingDoubleMuonLowMass1/Run2022F-PromptReco-v1/MINIAOD'
 #config.Data.inputDataset = '/ScoutingPFMonitor/Run2022F-v1/RAW'
 
-config.Debug.extraJDL = ['+REQUIRED_OS="rhel9"']
+config.Debug.extraJDL = ['+DESIRED_OS="rhel9"']
 
 # These values only make sense for processing data
 #    Select input data based on a lumi mask
