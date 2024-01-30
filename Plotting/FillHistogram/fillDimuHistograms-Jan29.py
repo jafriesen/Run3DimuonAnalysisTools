@@ -111,7 +111,7 @@ def fillHistogram():
 				if abs(dimu.Eta()) < eta_cut[cut][0] or abs(dimu.Eta()) > eta_cut[cut][1] : continue
 				for i_selection in range(len(muon_selections)) :
 					if not (ev.muonID1[i_selection] and ev.muonID2[i_selection]) : continue
-					if(verbose) : print(ev.pt, dimu.Eta(), ev.muonID1[i_selection], ev.muonID2[i_selection], "massDimu_pt" + str(pt_bins[i]) + "to" + str(pt_bins[i+1]) + "_" + cut + "_" + muon_selections[i_selection])
+					if(verbose) : print(ev.pt, dimu.Eta(), ev.muonID1[i_selection], ev.muonID2[i_selection], "massDimu_pt" + str(pt_bins[i_bin]) + "to" + str(pt_bins[i_bin+1]) + "_" + cut + "_" + muon_selections[i_selection])
 					config[i_bin][cut][muon_selections[i_selection]].Fill(ev.mass)
 
 	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")
