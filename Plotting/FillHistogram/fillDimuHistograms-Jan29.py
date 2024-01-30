@@ -71,7 +71,7 @@ def fillHistogram():
 	mmg_high = round(1./bin_width)*bin_width
 	mmg_bins = round((mmg_high - mmg_low)/bin_width)
 
-	verbose = True
+	verbose = False
 
 	muon_selections = (
 		"isHighPtMuon",
