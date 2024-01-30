@@ -105,7 +105,10 @@ def fillHistogram():
 		for i_bin in range(len(pt_bins)-1) :
 			if ev.pt < pt_bins[i_bin] or ev.pt > pt_bins[i_bin+1] : continue
 			for cut in eta_cut :
-				if abs(ev.eta) < eta_cut[cut][0] or abs(ev.eta) > eta_cut[cut][1] : continue
+				mu1 = ROOT.Math.PtEtaPhiMVector(ev.pt1, ev.eta1, ev.phi1, MU_MASS) 
+				mu2 = ROOT.Math.PtEtaPhiMVector(ev.pt2, ev.eta2, ev.phi2, MU_MASS)
+				dimu = mu1+mu2
+				if abs(dimu.Eta()) < eta_cut[cut][0] or abs(dimu.Eta()) > eta_cut[cut][1] : continue
 				for i_selection in range(len(muon_selections)) :
 					if not (ev.muonID1[i_selection] and ev.muonID2[i_selection]) : continue
 					if(verbose) : print(ev.pt, ev.eta, ev.muonID1[i_selection], ev.muonID2[i_selection], "massDimu_pt" + str(pt_bins[i]) + "to" + str(pt_bins[i+1]) + "_" + cut + "_" + muon_selections[i_selection])
