@@ -94,7 +94,7 @@ def fillHistogram():
 		for cut in eta_cut :
 			config[i_bin][cut] = {}
 			for selection in muon_selections :
-				name = "massDimu_pt" + str(pt_bins[i]) + "to" + str(pt_bins[i+1]) + "_" + cut + "_" + selection
+				name = "massDimu_pt" + str(pt_bins[i_bin]) + "to" + str(pt_bins[i_bin+1]) + "_" + cut + "_" + selection
 				config[i_bin][cut][selection] = ROOT.TH1F(name,name,mmg_bins,mmg_low,mmg_high)
 
 	i_event = 0
@@ -103,7 +103,7 @@ def fillHistogram():
 		if(verbose or i_event%10000==0): print("passed event:",i_event)
 		i_event+=1
 		for i_bin in range(len(pt_bins)-1) :
-			if ev.pt < pt_bins[i] or ev.pt > pt_bins[i+1] : continue
+			if ev.pt < pt_bins[i_bin] or ev.pt > pt_bins[i_bin+1] : continue
 			for cut in eta_cut :
 				if abs(ev.eta) < eta_cut[cut][0] or abs(ev.eta) > eta_cut[cut][1] : continue
 				for i_selection in range(len(muon_selections)) :
@@ -116,9 +116,9 @@ def fillHistogram():
 	for i_bin in range(len(pt_bins)-1) :
 		for cut in eta_cut :
 			for selection in muon_selections :
-				name = "massDimu_pt" + str(pt_bins[i]) + "to" + str(pt_bins[i+1]) + "_" + cut + "_" + selection
+				name = "massDimu_pt" + str(pt_bins[i_bin]) + "to" + str(pt_bins[i_bin+1]) + "_" + cut + "_" + selection
 				print("saving as " + name + " with",config[i_bin][cut][selection].GetEntries(),"entries")
-				outfile.WriteObject(cconfig[i_bin][cut][selection], name)
+				outfile.WriteObject(config[i_bin][cut][selection], name)
 
 	outfile.Close()
 
