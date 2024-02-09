@@ -68,7 +68,7 @@ def fillHistogram():
 
 	bin_width = 0.001
 	mmg_low = round(0./bin_width)*bin_width
-	mmg_high = round(1./bin_width)*bin_width
+	mmg_high = round(1.4/bin_width)*bin_width
 	mmg_bins = round((mmg_high - mmg_low)/bin_width)
 
 	verbose = False
