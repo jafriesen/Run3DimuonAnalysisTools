@@ -695,6 +695,10 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             gen_motherID.push_back(genp->pdgId());
             gen_grandMotherID.push_back(daught_mup->grandMotherPdgId());
 
+
+            std::cout << "mup gm: " << daught_mup->grandMotherPdgId() << " mum gm: " << daught_mum->grandMotherPdgId() << " grandMotherID1: " << grandMotherID[0] << " grandMotherID2: " << grandMotherID[1] << std::endl;
+
+
             ROOT::Math::PtEtaPhiMVector gen_mu1_v(daught_mum->pt(), daught_mum->eta(), daught_mum->phi(), mu_mass);
             ROOT::Math::PtEtaPhiMVector gen_mu2_v(daught_mup->pt(), daught_mup->eta(), daught_mup->phi(), mu_mass);
             gen_mumu_mass.push_back( (gen_mu1_v + gen_mu2_v).M() );
