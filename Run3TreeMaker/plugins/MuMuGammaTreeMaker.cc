@@ -244,6 +244,7 @@ private:
   */
 
   int motherID[2];
+  int grandMotherID[2];
   int simType[2];
   int simExtType[2];
   int matchedGenIdx;
@@ -254,6 +255,7 @@ private:
   std::vector< std::vector<float> > gen_matchedPhotonPhi;
 
   std::vector<int> gen_motherID;
+  std::vector<int> gen_grandMotherID;
   std::vector<float> gen_mumu_mass;
   std::vector<float> gen_mu_pt[2];
   std::vector<float> gen_mu_eta[2];
@@ -576,6 +578,8 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     if ( fillTree ) {
       motherID[0]=muonsH->at(mu_idx[0]).simMotherPdgId();
       motherID[1]=muonsH->at(mu_idx[1]).simMotherPdgId();
+      grandMotherID[0]=muonsH->at(mu_idx[0]).simGrandMotherPdgId();
+      grandMotherID[1]=muonsH->at(mu_idx[1]).simGrandMotherPdgId();
       simType[0]=muonsH->at(mu_idx[0]).simType();
       simType[1]=muonsH->at(mu_idx[1]).simType();
       simExtType[0]=muonsH->at(mu_idx[0]).simExtType();
@@ -583,6 +587,8 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     } else {
       motherID[0]=0;
       motherID[1]=0;
+      grandMotherID[0]=0;
+      grandMotherID[1]=0;
       simType[0]=0;
       simType[1]=0;
       simExtType[0]=0;
@@ -590,6 +596,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
     }
 
     gen_motherID.clear();
+    gen_grandMotherID.clear();
     matchedGenIdx = -1;
     gen_mu_recoMatch[0].clear();
     gen_mu_recoMatch[1].clear();
@@ -686,6 +693,7 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
             gen_mu_recoMatch[1].push_back(isMatched2);
 
             gen_motherID.push_back(genp->pdgId());
+            gen_grandMotherID.push_back(daught_mup->grandMotherPdgId());
 
             ROOT::Math::PtEtaPhiMVector gen_mu1_v(daught_mum->pt(), daught_mum->eta(), daught_mum->phi(), mu_mass);
             ROOT::Math::PtEtaPhiMVector gen_mu2_v(daught_mup->pt(), daught_mup->eta(), daught_mup->phi(), mu_mass);
@@ -759,12 +767,15 @@ void MuMuGammaTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup
   } else if (fillTree) {
     motherID[0]=0;
     motherID[1]=0;
+    grandMotherID[0]=0;
+    grandMotherID[1]=0;
     simType[0]=0;
     simType[1]=0;
     simExtType[0]=0;
     simExtType[1]=0;
 
     gen_motherID.clear();
+    gen_grandMotherID.clear();
     matchedGenIdx = -1;
     gen_mu_recoMatch[0].clear();
     gen_mu_recoMatch[1].clear();
@@ -967,6 +978,8 @@ void MuMuGammaTreeMaker::beginJob() {
 
     tree->Branch("motherID1"              , &motherID[0]                     , "motherID1/I"  );
     tree->Branch("motherID2"              , &motherID[1]                      , "motherID2/I" );
+    tree->Branch("grandMotherID1"              , &grandMotherID[0]                     , "grandMotherID1/I"  );
+    tree->Branch("grandMotherID2"              , &grandMotherID[1]                      , "grandMotherID2/I" );
     tree->Branch("simType1"              , &simType[0]                      , "simType1/I"  );
     tree->Branch("simType2"              , &simType[1]                      , "simType2/I"  );
     tree->Branch("simExtType1"              , &simExtType[0]                      , "simExtType1/I"  );
@@ -975,6 +988,7 @@ void MuMuGammaTreeMaker::beginJob() {
     tree->Branch("matchedGenIdx"              , &matchedGenIdx                    , "matchedGenIdx/I"  );
 
     tree->Branch("gen_motherID", "std::vector<int>", &gen_motherID, 32000, 0);
+    tree->Branch("gen_grandMotherID", "std::vector<int>", &gen_grandMotherID, 32000, 0);
     tree->Branch("gen_mumu_mass", "std::vector<float>", &gen_mumu_mass, 32000, 0);
 
     tree->Branch("gen_mu1_pt", "std::vector<float>", &gen_mu_pt[0], 32000, 0);
