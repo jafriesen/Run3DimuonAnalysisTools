@@ -19,7 +19,7 @@ n = [ 24, 26, 27, 30, 31, 34, 35, 40 ]
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        ["file:/eos/user/a/asterenb/EtaToGammaApr_AprToMuMu_2022/EtaToGammaApr_AprToMuMu_2022_MINIAOD_" + str(int(i)) + ".root" for i in range(100)]
+        ["file:/eos/user/a/asterenb/EtaToGammaApr_AprToMuMu_2022/EtaToGammaApr_AprToMuMu_2022_MINIAOD_" + str(int(i)) + ".root" for i in range(100) if not i in n ]
     )
 )
 
