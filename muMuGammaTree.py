@@ -15,6 +15,13 @@ process.maxEvents = cms.untracked.PSet(
 
 dir = "root://xrootd-cms.infn.it//"
 
+process.source = cms.Source("PoolSoutce",
+    fileNames = cms.untracked.vstring(
+        "/eos/user/a/asterenb/EtaToGammaApr_AprToMuMu_2022/EtaToGammaApr_AprToMuMu_2022_MINIAOD_54.root"
+    )
+)
+
+'''
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
 dir+"/store/mc/Run3Summer22MiniAODv3/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8/MINIAODSIM/Pilot_124X_mcRun3_2022_realistic_v12-v5/2820000/f365faac-9a86-45cc-b1b4-87f036b1a2fa.root",
@@ -119,6 +126,7 @@ dir+"/store/mc/Run3Summer22MiniAODv3/InclusiveDileptonMinBias_TuneCP5Plus_13p6Te
 dir+"/store/mc/Run3Summer22MiniAODv3/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8/MINIAODSIM/Pilot_124X_mcRun3_2022_realistic_v12-v5/2820000/2c0ec819-fba2-4216-a000-cd36f8a87e6a.root"
  )
 )
+'''
 
 #process.load("Run3ScoutingAnalysisTools.ScoutingFilter.ScoutingFilter_cff")
 
