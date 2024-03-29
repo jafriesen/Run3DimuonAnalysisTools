@@ -12,65 +12,135 @@ MU_MASS = 0.105658
 
 ROOT.gROOT.SetBatch()
 
-itree = TChain("tree/tree")
-itree.Add("")
-ofile = ROOT.TFile("MCTree.root", "RECREATE")
-otree = ROOT.TTree("tree", "tree")
+itree = ROOT.TChain("tree/tree")
+itree.Add("mmgTree-2.root")
 
-l_decay = (
-	"other",
-	"isEta2MuMu",
-	"isEta2MuMuGamma",
-	"isEtaPrime2MuMu",
-	"isEtaPrime2MuMuGamma",
-	"isOmega2MuMu",
-	"isOmega2Pi0MuMu",
-	"isRho2MuMu",
-	"isPhi2MuMu",
-	"isPhi2KK",
+
+l_level = (
+	"gen",
+	"gen_matched",
+	"gen_partiallymatched",
+	"reco_matched",
+	"reco_partiallymatched",
+	"delta",
+	"delta_over_truth"
 )
 l_var = (
-	"gen_mumu_mass",
-	"mass_mumu_match1",
-	"mass_mumu_match2",
-	"delta_mass_mumu"
-	"delta_mass_mumu_over_truth",
+	"mass_mumu",
+	"pt_mumu",
+	"pt_leading",
+	"pt_trailing",
+	"dr"
 )
 
-arrs = {}
-for d in l_decay :
-	arrs[d] = {}
-	for v in l_var :
-		name = d + "_" + v
-		arrs[d][v] = array("d",[0])
-		t.Branch(name, arrs[d][v], name+"/D")
 
+
+i_ev = 0
 for ev in itree :
+
+	if i_ev % 5000000 == 0 :
+		if i_ev > 0 :
+			print("saving")
+			ofile.Write()
+			ofile.Close()
+		ofile = ROOT.TFile("MCTree_" + str(int(i_ev / 5000000)) + ".root", "RECREATE")
+		otree = ROOT.TTree("tree_" + str(int(i_ev / 5000000)), "tree" + str(int(i_ev / 5000000)))
+		arrs = {}
+		arrs["decay"] = array("i",[0])
+		otree.Branch("decay", arrs["decay"], "decay/I")
+		for l in l_level :
+			arrs[l] = {}
+			for v in l_var :
+				name = l + "_" + v
+				arrs[l][v] = array("d",[0])
+				otree.Branch(name, arrs[l][v], name+"/D")
+	if i_ev % 100000 == 0 : print(i_ev)
+	i_ev += 1
+
+	#print(i_ev, ev.motherID1, ev.motherID2, ev.mumu_mass, ev.gen_motherID, ev.gen_mumu_mass)
 	for i_dimu in range(len(ev.gen_motherID)) :
 
-		for d in l_decay :
-			for v in l_var :
-				arrs[d][v][0] = -1
+		nPhotons = len(ev.gen_matchedPhotonPt[i_dimu])
+		'''
 		decay = "other"
 		if ev.gen_isEta2MuMu[i_dimu] : decay = "isEta2MuMu"
 		if ev.gen_isEta2MuMuGamma[i_dimu] : decay = "isEta2MuMuGamma"
 		if ev.gen_isEtaPrime2MuMu[i_dimu] : decay = "isEtaPrime2MuMu"
 		if ev.gen_isEtaPrime2MuMuGamma[i_dimu] : decay = "isEtaPrime2MuMuGamma"
 		if ev.gen_isOmega2MuMu[i_dimu] : decay = "isOmega2MuMu"
+		if abs(ev.gen_motherID[i_dimu]) == 223 and (nPhotons == 1) : decay = "isOmega2MuMuGamma"
 		if ev.gen_isOmega2Pi0MuMu[i_dimu] : decay = "isOmega2Pi0MuMu"
 		if ev.gen_isRho2MuMu[i_dimu] : decay = "isRho2MuMu"
+		if abs(ev.gen_motherID[i_dimu]) == 113 and (nPhotons == 1) : decay = "isRho2MuMuGamma"
 		if ev.gen_isPhi2MuMu[i_dimu] : decay = "isPhi2MuMu"
+		if abs(ev.gen_motherID[i_dimu]) == 333 and (nPhotons == 1) : decay = "isPhi2MuMuGamma"
 		if ev.gen_isPhi2KK[i_dimu] : decay = "isPhi2KK"
+		'''
+		decay_flags = (
+			1 * ev.gen_isEta2MuMu[i_dimu],
+			2 * ev.gen_isEta2MuMuGamma[i_dimu],
+			3 * ev.gen_isEtaPrime2MuMu[i_dimu],
+			4 * ev.gen_isEtaPrime2MuMuGamma[i_dimu],
+			5 * ev.gen_isOmega2MuMu[i_dimu],
+			6 * ( abs(ev.gen_motherID[i_dimu]) == 223 and (nPhotons == 1) ),
+			7 * ev.gen_isOmega2Pi0MuMu[i_dimu],
+			8 * ev.gen_isRho2MuMu[i_dimu],
+			9 * ( abs(ev.gen_motherID[i_dimu]) == 113 and (nPhotons == 1) ),
+			10 * ev.gen_isPhi2MuMu[i_dimu],
+			11 * ( abs(ev.gen_motherID[i_dimu]) == 333 and (nPhotons == 1) ),
+			12 * ev.gen_isPhi2KK[i_dimu]
+		)
+		decay = 0
+		for flag in decay_flags :
+			if flag > 0 : decay = flag
+		arrs["decay"][0] = decay
+		#print(decay)
 
-		arrs[decay]["gen_mumu_mass"] = ev.gen_mumu_mass[i_dimu]
-		if ev.gen_mu1_recoMatch[i_dimu] or ev.gen_mu2_recoMatch[i_dimu] : arrs[decay]["mass_mumu_match1"] = ev.gen_mumu_mass[i_dimu]
-		if ev.gen_mu1_recoMatch[i_dimu] and ev.gen_mu2_recoMatch[i_dimu] :
-			arrs[decay]["mass_mumu_match2"] = ev.gen_mumu_mass[i_dimu]
-			arrs[decay]["delta_mass_mumu"] = ev.gen_mumu_mass[i_dimu] - ev.mumu_mass[i_dimu]
-			arrs[decay]["delta_mass_mumu_over_truth"] = ( ev.gen_mumu_mass[i_dimu] - ev.mumu_mass[i_dimu] ) / ev.gen_mumu_mass[i_dimu]
+		v_mu1_gen = ROOT.Math.PtEtaPhiMVector(ev.gen_mu1_pt[i_dimu], ev.gen_mu1_eta[i_dimu], ev.gen_mu1_phi[i_dimu], MU_MASS)
+		v_mu2_gen = ROOT.Math.PtEtaPhiMVector(ev.gen_mu2_pt[i_dimu], ev.gen_mu2_eta[i_dimu], ev.gen_mu2_phi[i_dimu], MU_MASS)
+		v_dimu_gen = v_mu1_gen+v_mu2_gen
+		dr_gen = abs(ROOT.Math.VectorUtil.DeltaR(v_mu1_gen, v_mu2_gen))
+		variables = {
+			"mass_mumu" : {
+				"gen" :		ev.gen_mumu_mass[i_dimu],
+				"reco" : 	ev.mumu_mass
+			},
+			"pt_mumu" : {
+				"gen" :		v_dimu_gen.Pt(),
+				"reco" :	ev.mumu_pt
+			},
+			"dr" : {
+				"gen" : 	dr_gen,
+				"reco" :	ev.mumu_deltaR
+			}
+		}
+		pt_gen = ( ev.gen_mu1_pt[i_dimu], ev.gen_mu2_pt[i_dimu] )
+		pt_reco = ( ev.mu1_pt, ev.mu2_pt )
+		i_leading = 0 if ev.gen_mu1_pt[i_dimu] > ev.gen_mu2_pt[i_dimu] else 1
+		variables["pt_leading"] = {
+			"gen" : 	pt_gen[i_leading],
+			"reco" : 	pt_reco[i_leading],
+		}
+		variables["pt_trailing"] = {
+			"gen" : 	pt_gen[1-i_leading],
+			"reco" : 	pt_reco[1-i_leading],
+		}
 
-		t.Fill()
+		for v in l_var :
+			if ev.gen_mu1_recoMatch[i_dimu] or ev.gen_mu2_recoMatch[i_dimu] :
+				arrs["gen_partiallymatched"][v][0] = variables[v]["gen"]
+				arrs["reco_partiallymatched"][v][0] = variables[v]["reco"]
+			if ev.gen_mu1_recoMatch[i_dimu] and ev.gen_mu2_recoMatch[i_dimu] :
+				arrs["gen_matched"][v][0] = variables[v]["gen"]
+				arrs["reco_matched"][v][0] = variables[v]["reco"]
+				arrs["delta"][v][0] = variables[v]["gen"] - variables[v]["reco"]
+				arrs["delta_over_truth"][v][0] = ( variables[v]["gen"] - variables[v]["reco"] ) / variables[v]["gen"]
+			else :
+				for l in l_level :
+					arrs[l][v][0] = -9999
+			arrs["gen"][v][0] = variables[v]["gen"]
 
-ofile.Write()
-ofile.Close()
+		otree.Fill()
+
+
 
