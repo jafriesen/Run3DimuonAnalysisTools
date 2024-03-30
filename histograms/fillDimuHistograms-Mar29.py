@@ -79,9 +79,9 @@ def fillHistogram():
 	i_event = 0
 	for ev in t_scoutMuon :
 		if verbose : print( "event", ev.eventNum, "luminosityBlock", ev.lumiSec, "run", ev.runNum )
-		arrs["event"]["arr"][0] = ev.eventNum
-		arrs["luminosityBlock"]["arr"][0] = ev.lumiSec
-		arrs["run"]["arr"][0] = ev.runNum
+		variables["event"]["arr"][0] = ev.eventNum
+		variables["luminosityBlock"]["arr"][0] = ev.lumiSec
+		variables["run"]["arr"][0] = ev.runNum
 		otree.Fill()
 
 	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")
