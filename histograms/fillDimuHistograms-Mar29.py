@@ -66,63 +66,27 @@ def fillHistogram():
 		t_scoutMuon.Add(files[i])
 		print(t_scoutMuon.GetEntries())
 
-	bin_width = 0.001
-	mmg_low = round(0./bin_width)*bin_width
-	mmg_high = round(1.4/bin_width)*bin_width
-	mmg_bins = round((mmg_high - mmg_low)/bin_width)
-
-	verbose = False
-
-	muon_selections = (
-		"isHighPtMuon",
-		"isLooseMuon",
-		"isMediumMuon",
-		"isSoftMuon",
-		"isTightMuon"
-	)
-
-	eta_cut = {
-		"barrel" : ( 0, 1.48 ),
-		"endcap" : ( 1.48, 3 )
+	variables = {
+		"event" : { "arr" : array("i",[0]) },
+		"luminosityBlock" : { "arr" : array("i",[0]) },
+		"run" : { "arr" : array("i",[0]) },
 	}
+	otree = ROOT.TTree("t_event_info","t_event_info")
+	for v in variables : otree.Branch(v, variables[v]["arr"], v+"/I")
 
-	pt_bins = [ 7, 9, 11, 13, 15, 19, 23, 27 ]
-
-	config = {}
-	for i_bin in range(len(pt_bins)-1) :
-		config[i_bin] = {}
-		for cut in eta_cut :
-			config[i_bin][cut] = {}
-			for selection in muon_selections :
-				name = "massDimu_pt" + str(pt_bins[i_bin]) + "to" + str(pt_bins[i_bin+1]) + "_" + cut + "_" + selection
-				config[i_bin][cut][selection] = ROOT.TH1F(name,name,mmg_bins,mmg_low,mmg_high)
+	verbose = True
 
 	i_event = 0
 	for ev in t_scoutMuon :
-		if (ev.pt < pt_bins[0] or ev.pt > pt_bins[-1]) : continue
-		if(verbose or i_event%10000==0): print("passed event:",i_event)
-		i_event+=1
-		for i_bin in range(len(pt_bins)-1) :
-			if ev.pt < pt_bins[i_bin] or ev.pt > pt_bins[i_bin+1] : continue
-			for cut in eta_cut :
-				mu1 = ROOT.Math.PtEtaPhiMVector(ev.pt1, ev.eta1, ev.phi1, MU_MASS) 
-				mu2 = ROOT.Math.PtEtaPhiMVector(ev.pt2, ev.eta2, ev.phi2, MU_MASS)
-				dimu = mu1+mu2
-				if abs(dimu.Eta()) < eta_cut[cut][0] or abs(dimu.Eta()) > eta_cut[cut][1] : continue
-				for i_selection in range(len(muon_selections)) :
-					if not (ev.muonID1[i_selection] and ev.muonID2[i_selection]) : continue
-					if(verbose) : print(ev.pt, dimu.Eta(), ev.muonID1[i_selection], ev.muonID2[i_selection], "massDimu_pt" + str(pt_bins[i_bin]) + "to" + str(pt_bins[i_bin+1]) + "_" + cut + "_" + muon_selections[i_selection])
-					config[i_bin][cut][muon_selections[i_selection]].Fill(ev.mass)
+		if verbose : print( "event", ev.eventNum, "luminosityBlock", ev.lumiSec, "run", ev.runNum )
+		arrs["event"]["arr"][0] = ev.eventNum
+		arrs["luminosityBlock"]["arr"][0] = ev.lumiSec
+		arrs["run"]["arr"][0] = ev.runNum
+		otree.Fill()
 
 	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")
 	outfile = ROOT.TFile(str(opt.OUTPUT)+str(opt.JOB)+".root", "recreate")
-	for i_bin in range(len(pt_bins)-1) :
-		for cut in eta_cut :
-			for selection in muon_selections :
-				name = "massDimu_pt" + str(pt_bins[i_bin]) + "to" + str(pt_bins[i_bin+1]) + "_" + cut + "_" + selection
-				print("saving as " + name + " with",config[i_bin][cut][selection].GetEntries(),"entries")
-				outfile.WriteObject(config[i_bin][cut][selection], name)
-
+	outfile.Write()
 	outfile.Close()
 
 if __name__ == "__main__":
