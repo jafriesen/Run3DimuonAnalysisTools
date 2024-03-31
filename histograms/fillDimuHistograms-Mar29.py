@@ -66,8 +66,8 @@ def fillHistogram():
 	itree = TChain(itree_name)
 	for i in range(len(files)):
 		if (i<first or i>=last): continue
-		print("Getting", itree_name, "from", files[i])
-		itree.Add(files[i])
+		print("Getting", itree_name, "from", redirector+files[i])
+		itree.Add(redirector+files[i])
 		print(itree.GetEntries(), "total entries in TChain")
 
 	print("Creating "+str(opt.OUTPUT)+str(opt.JOB)+".root")
