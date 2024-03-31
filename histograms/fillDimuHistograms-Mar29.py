@@ -11,6 +11,7 @@ import time
 from time import gmtime, strftime
 import math
 from array import array
+from pathlib import Path
 
 Z_MASS = 91.1876
 ETA_MASS = 0.547862
@@ -48,23 +49,29 @@ def fillHistogram():
 	parseOptions()
 
 	ROOT.gROOT.SetBatch()
-	print(opt.INPUT)
 
-	files = [ "root://cmsxrootd.fnal.gov//"+line for line in open(str(opt.LIST))]
+	print("Getting list of input files from ", opt.LIST)
+	file_list = Path(opt.LIST).read_text().splitlines()
 
 	N = len(files)
-
 	first = int(float(N)/float(opt.NJOBS)*float(opt.JOB-1))
 	last = int(float(N)/float(opt.NJOBS)*float(opt.JOB))
+	print("Total number of input files:", N)
+	print("Job", opt.JOB, "of", opt.NJOBS, "using files", first, "through", last-1)
 
-	print(first, last)
+	redirector = "root://cmsxrootd.fnal.gov//"
+	print("Using redirector", redirector)
 
-	t_scoutMuon = TChain("tree/tree")
+	itree_name = "tree/tree"
+	itree = TChain(itree_name)
 	for i in range(len(files)):
 		if (i<first or i>=last): continue
-		print(files[i])
-		t_scoutMuon.Add(files[i])
-		print(t_scoutMuon.GetEntries())
+		print("Getting", itree_name, "from", files[i])
+		itree.Add(files[i])
+		print(itree.GetEntries(), "total entries in TChain")
+
+	print("Creating "+str(opt.OUTPUT)+str(opt.JOB)+".root")
+	outfile = ROOT.TFile(str(opt.OUTPUT)+str(opt.JOB)+".root", "recreate")
 
 	variables = {
 		"event" : { "arr" : array("i",[0]) },
@@ -74,18 +81,17 @@ def fillHistogram():
 	otree = ROOT.TTree("t_event_info","t_event_info")
 	for v in variables : otree.Branch(v, variables[v]["arr"], v+"/I")
 
-	verbose = True
+	verbose = False
 
 	i_event = 0
-	for ev in t_scoutMuon :
+	for ev in itree :
 		if verbose : print( "event", ev.eventNum, "luminosityBlock", ev.lumiSec, "run", ev.runNum )
 		variables["event"]["arr"][0] = ev.eventNum
 		variables["luminosityBlock"]["arr"][0] = ev.lumiSec
 		variables["run"]["arr"][0] = ev.runNum
 		otree.Fill()
 
-	print("saving as "+str(opt.OUTPUT)+str(opt.JOB)+".root")
-	outfile = ROOT.TFile(str(opt.OUTPUT)+str(opt.JOB)+".root", "recreate")
+	print("Saving output to "+str(opt.OUTPUT)+str(opt.JOB)+".root")
 	outfile.Write()
 	outfile.Close()
 
