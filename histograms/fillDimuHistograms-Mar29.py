@@ -83,6 +83,7 @@ def fillHistogram():
 
 	verbose = False
 
+	print("Processing events...")
 	i_event = 0
 	for ev in itree :
 		if verbose : print( "event", ev.eventNum, "luminosityBlock", ev.lumiSec, "run", ev.runNum )
