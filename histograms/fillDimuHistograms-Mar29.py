@@ -51,7 +51,7 @@ def fillHistogram():
 	ROOT.gROOT.SetBatch()
 
 	print("Getting list of input files from ", opt.LIST)
-	file_list = Path(opt.LIST).read_text().splitlines()
+	files = Path(opt.LIST).read_text().splitlines()
 
 	N = len(files)
 	first = int(float(N)/float(opt.NJOBS)*float(opt.JOB-1))
