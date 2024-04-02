@@ -1,5 +1,4 @@
 import gfal2
-import json
 
 input_dirs = { # label for organization : path to dataset
     ## Run2022C
