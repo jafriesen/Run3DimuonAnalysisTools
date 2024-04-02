@@ -74,7 +74,6 @@ def fillHistogram():
 	outfile = ROOT.TFile(str(opt.OUTPUT)+str(opt.JOB)+".root", "recreate")
 
 	variables = {
-		"event" : { "arr" : array("i",[0]) },
 		"luminosityBlock" : { "arr" : array("i",[0]) },
 		"run" : { "arr" : array("i",[0]) },
 	}
@@ -86,8 +85,7 @@ def fillHistogram():
 	print("Processing events...")
 	i_event = 0
 	for ev in itree :
-		if verbose : print( "event", ev.eventNum, "luminosityBlock", ev.lumiSec, "run", ev.runNum )
-		variables["event"]["arr"][0] = ev.eventNum
+		if verbose : print( "luminosityBlock", ev.lumiSec, "run", ev.runNum )
 		variables["luminosityBlock"]["arr"][0] = ev.lumiSec
 		variables["run"]["arr"][0] = ev.runNum
 		otree.Fill()
