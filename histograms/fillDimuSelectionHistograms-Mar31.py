@@ -103,13 +103,13 @@ def fillHistograms() :
 			else :
 				name = "mumu_mass_" + ID + "_vtxProb" + str(vtxProb_bins[i_vtxProb]).replace(".","p") + "to" + str(vtxProb_bins[i_vtxProb+1]).replace(".","p")
 			print("Creating histogram", name)
-			muon_IDs[ID][i_vtxProb] = ROOT.TH1F(name,name,mumu_mass_bins,mumu_mass_low,mumu_mass_high)
+			muon_IDs[ID][i_vtxProb] = ROOT.TH1F(name,name,mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
 
 	print("Processing events...")
 	i_event = 0
 	for ev in itree :
-		if (ev.mass > mumu_mass_high) : continue
-		if(verbose or i_event%10000==0): print("mumu_mass < mumu_mass_high event:",i_event)
+		if (ev.mass > mumu_mass_range[1]) : continue
+		if(verbose or i_event%10000==0): print( "mumu_mass <", mumu_mass_range[1], "event", i_event )
 		i_event+=1
 		for i_vtxProb in range(len(vtxProb_bins)) :
 			if vtxProb_bins[i_vtxProb] != vtxProb_bins[-1] and ev.probVtx > vtxProb_bins[i_vtxProb + 1] : continue
