@@ -122,7 +122,7 @@ def fillHistograms() :
 	for i_vtxProb in range(len(vtxProb_bins)) :
 		for ID in muon_IDs :
 			name = muon_IDs[ID][i_vtxProb].GetName()
-			print( "Saving", name, "to", str(opt.OUTPUT)+str(opt.JOB)+".root", "with", muon_IDs[ID][i_vtxProb].GetEntries(). "entries" )
+			print( "Saving", name, "to", str(opt.OUTPUT)+str(opt.JOB)+".root", "with", muon_IDs[ID][i_vtxProb].GetEntries(), "entries" )
 			outfile.WriteObject( muon_IDs[ID][i_vtxProb], name )
 
 	outfile.Close()
