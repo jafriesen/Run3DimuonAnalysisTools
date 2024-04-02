@@ -59,7 +59,7 @@ def fillHistograms() :
 	print( "	Using redirector", redirector )
 
 	itree_name = "tree/tree"
-	itree = TChain(itree_name)
+	itree = ROOT.TChain(itree_name)
 	for i in range(len(file_list)):
 		if (i<first or i>=last): continue
 		print("Getting", itree_name, "from", redirector+file_list[i])
