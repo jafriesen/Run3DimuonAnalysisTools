@@ -45,12 +45,12 @@ def fillHistograms() :
 	# get input files from list (parsed option)
 	print( "Opening list of input files", opt.LIST )
 	file_list = Path(opt.LIST).read_text().splitlines()
-	print( "	Found", len(files), "items in list")
+	print( "	Found", len(file_list), "items in list")
 
-	njobs_actual = min( opt.NJOBS, len(files) )
+	njobs_actual = min( opt.NJOBS, len(file_list) )
 	file_range = (
-		int( ( (float(opt.JOB)-1) * len(files) ) / njobs_actual ),
-		int( ( (float(opt.JOB)) * len(files) ) / njobs_actual )
+		int( ( (float(opt.JOB)-1) * len(file_list) ) / njobs_actual ),
+		int( ( (float(opt.JOB)) * len(file_list) ) / njobs_actual )
 	)
 	
 	print( "	Job", opt.JOB, "of", opt.NJOBS, "using file range", file_range )
@@ -60,10 +60,10 @@ def fillHistograms() :
 
 	itree_name = "tree/tree"
 	itree = TChain(itree_name)
-	for i in range(len(files)):
+	for i in range(len(file_list)):
 		if (i<first or i>=last): continue
-		print("Getting", itree_name, "from", redirector+files[i])
-		itree.Add(redirector+files[i])
+		print("Getting", itree_name, "from", redirector+file_list[i])
+		itree.Add(redirector+file_list[i])
 		print(itree.GetEntries(), "total entries in TChain")
 
 	print("Creating "+str(opt.OUTPUT)+str(opt.JOB)+".root")
