@@ -60,8 +60,7 @@ def fillHistograms() :
 
 	itree_name = "tree/tree"
 	itree = ROOT.TChain(itree_name)
-	for i in range(len(file_list)):
-		if (i<first or i>=last): continue
+	for i in range(file_range[0], file_range[1]) :
 		print("Getting", itree_name, "from", redirector+file_list[i])
 		itree.Add(redirector+file_list[i])
 		print(itree.GetEntries(), "total entries in TChain")
