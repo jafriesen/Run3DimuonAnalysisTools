@@ -91,9 +91,9 @@ def submitFillHistogram():
   if opt.LIST != "" :
       listname = startdir+"/"+opt.LIST
 
-  for i in range(1, opt.NJOBS+1):
+  for i in range(opt.NJOBS):
     outscript.write('\nif [ $1 -eq %i ]; then\n' % i)
-    line = "python3 "+startdir+"/"+str(opt.SCRIPTNAME)+" -i "+str(opt.INPUT)+" -o "+str(opt.OUTPUT)+" -n "+str(opt.NJOBS)+" -j "+str(i)
+    line = "python3 "+startdir+"/"+str(opt.SCRIPTNAME)+" -i "+str(opt.INPUT)+" -o "+str(opt.OUTPUT)+" -n "+str(opt.NJOBS)+" -j "+str(i+1)
     if opt.LIST != "" :
       line += " -l "+str(startdir)+"/"+str(opt.LIST)
     outscript.write('  ' + line + '\n')
