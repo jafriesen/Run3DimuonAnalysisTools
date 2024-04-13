@@ -12,8 +12,6 @@ JOB_PREFIX = """#!/bin/sh
 cd %(CMSSW_BASE)s/src
 export SCRAM_ARCH=%(SCRAM_ARCH)s
 eval `scramv1 runtime -sh`
-cd -
-cp %(SCRIPTNAME)s .
 """
 
 CONDOR_TEMPLATE = """executable = %(EXE)s
@@ -73,8 +71,11 @@ def submitFillHistogram():
   parseOptions()
 
   startdir = os.getcwd()
-  os.mkdir(opt.TASKNAME)
-  os.chdir(startdir+"/"+opt.TASKNAME)
+  try :
+    os.mkdir(opt.TASKNAME)
+  except OSError as error :
+    print(error)
+  os.chdir(opt.TASKNAME)
 
   outscriptname = 'condor_%s.sh' % opt.TASKNAME
   subfilename = 'condor_%s.sub' % opt.TASKNAME
@@ -84,18 +85,18 @@ def submitFillHistogram():
   job_settings = JOB_PREFIX % {
       'CMSSW_BASE': os.environ['CMSSW_BASE'],
       'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
-      'SCRIPTNAME': startdir+"/"+str(opt.SCRIPTNAME)
+      'SCRIPTNAME': str(opt.SCRIPTNAME)
       }
   outscript.write(job_settings)
-
-  if opt.LIST != "" :
-      listname = startdir+"/"+opt.LIST
+  outscript.write("cp" + startdir + "/" + str(opt.SCRIPTNAME) + " .")
+  if opt.LIST != "" : outscript.write("cp " + startdir + "/" + str(opt.LIST) + " .")
 
   for i in range(opt.NJOBS):
     outscript.write('\nif [ $1 -eq %i ]; then\n' % i)
-    line = "python3 "+startdir+"/"+str(opt.SCRIPTNAME)+" -i "+str(opt.INPUT)+" -o "+str(opt.OUTPUT)+" -n "+str(opt.NJOBS)+" -j "+str(i+1)
+    #line = "python3 "+startdir+"/"+str(opt.SCRIPTNAME)+" -i "+str(opt.INPUT)+" -o "+str(opt.OUTPUT)+" -n "+str(opt.NJOBS)+" -j "+str(i+1)
+    line = "python3 " + str(opt.SCRIPTNAME) + " -o " + str(opt.OUTPUT) + " -n " + str(opt.NJOBS) + " -j " + str(i+1)
     if opt.LIST != "" :
-      line += " -l "+str(startdir)+"/"+str(opt.LIST)
+      line += " -l " + str(opt.LIST)
     outscript.write('  ' + line + '\n')
     outscript.write('fi \n')
   line = "cp "+opt.OUTPUT+"* "+opt.OUTDIR
@@ -108,7 +109,7 @@ def submitFillHistogram():
   condor_settings = CONDOR_TEMPLATE % {
       'EXE': outscriptname,
       'TASK': opt.TASKNAME,
-      'SCRIPTNAME': startdir+"/"+str(opt.SCRIPTNAME),
+      'SCRIPTNAME': opt.SCRIPTNAME,
       'NUMBER': opt.NJOBS
       }
 
@@ -120,7 +121,6 @@ def submitFillHistogram():
 
   os.chdir(startdir)
 
-      
-      
+
 if __name__ == "__main__":
   submitFillHistogram()
