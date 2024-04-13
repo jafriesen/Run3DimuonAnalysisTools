@@ -70,6 +70,9 @@ def submitFillHistogram():
   global opt, args
   parseOptions()
 
+  processCmd('echo voms-proxy-init --voms cms --valid 168:00 -out $HOME/private/.proxy')
+  processCmd('export X509_USER_PROXY=$HOME/private/.proxy')
+
   startdir = os.getcwd()
   try :
     os.mkdir(opt.TASKNAME)
@@ -86,7 +89,7 @@ def submitFillHistogram():
       'CMSSW_BASE': os.environ['CMSSW_BASE'],
       'SCRAM_ARCH': os.environ['SCRAM_ARCH'],
       'SCRIPTNAME': str(opt.SCRIPTNAME)
-      }
+  }
   outscript.write(job_settings)
   outscript.write("cp" + startdir + "/" + str(opt.SCRIPTNAME) + " .")
   if opt.LIST != "" : outscript.write("cp " + startdir + "/" + str(opt.LIST) + " .")
