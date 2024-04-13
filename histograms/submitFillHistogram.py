@@ -70,7 +70,6 @@ def submitFillHistogram():
   global opt, args
   parseOptions()
 
-  processCmd('echo voms-proxy-init --voms cms --valid 168:00 -out $HOME/private/.proxy')
   processCmd('export X509_USER_PROXY=$HOME/private/.proxy')
   processCmd('mkdir ' + str(opt.OUTDIR))
 
