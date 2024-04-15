@@ -86,7 +86,7 @@ def fillHistograms() :
 		fill = fills[ev.runNum]
 		histos[fill] = histos.get( fill, ROOT.TH1F("mass_mumu_fill"+str(fill),"mass_mumu_fill"+str(fill),mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1]) )
 		histos[fill].Fill(ev.mass)
-		print( ev.mass, ev.runNum, fill, i_event, histos[fill].GetEntries() )
+		#print( ev.mass, ev.runNum, fill, i_event, histos[fill].GetEntries() )
 
 	for h in histos :
 		histo = histos[h]
