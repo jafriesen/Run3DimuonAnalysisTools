@@ -92,8 +92,8 @@ def submitFillHistogram():
       'SCRIPTNAME': str(opt.SCRIPTNAME)
   }
   outscript.write(job_settings)
-  outscript.write("cp " + startdir + "/" + str(opt.SCRIPTNAME) + " .")
-  if opt.LIST != "" : outscript.write("cp " + startdir + "/" + str(opt.LIST) + " .")
+  outscript.write("\ncp " + startdir + "/" + str(opt.SCRIPTNAME) + " . \n")
+  if opt.LIST != "" : outscript.write("cp " + startdir + "/" + str(opt.LIST) + " . \n")
 
   for i in range(opt.NJOBS):
     outscript.write('\nif [ $1 -eq %i ]; then\n' % i)
