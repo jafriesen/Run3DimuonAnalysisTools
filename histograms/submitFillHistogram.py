@@ -12,6 +12,7 @@ JOB_PREFIX = """#!/bin/sh
 cd %(CMSSW_BASE)s/src
 export SCRAM_ARCH=%(SCRAM_ARCH)s
 eval `scramv1 runtime -sh`
+cd -
 """
 
 CONDOR_TEMPLATE = """executable = %(EXE)s
@@ -70,7 +71,7 @@ def submitFillHistogram():
   global opt, args
   parseOptions()
 
-  processCmd('export X509_USER_PROXY=$HOME/private/.proxy')
+  #processCmd('export X509_USER_PROXY=$HOME/private/.proxy')
   processCmd('mkdir ' + str(opt.OUTDIR))
 
   startdir = os.getcwd()
