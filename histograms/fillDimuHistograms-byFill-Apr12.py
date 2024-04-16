@@ -79,12 +79,14 @@ def fillHistograms() :
 
 	print("Processing events...")
 	i_event = 0
+	fill = 0
 	for ev in itree :
 		if (ev.mass > mumu_mass_range[1]) : continue
 		if(verbose or i_event%10000==0): print( "mumu_mass <", mumu_mass_range[1], "event", i_event, histos )
 		i_event+=1
 		fill = fills[ev.runNum]
-		histos[fill] = histos.get( fill, ROOT.TH1F("mass_mumu_fill"+str(fill),"mass_mumu_fill"+str(fill),mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1]) )
+		if not fill in histos:
+			histos[fill] = ROOT.TH1F("mass_mumu_fill"+str(fill),"mass_mumu_fill"+str(fill),mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
 		histos[fill].Fill(ev.mass)
 		#print( ev.mass, ev.runNum, fill, i_event, histos[fill].GetEntries() )
 
