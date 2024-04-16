@@ -82,7 +82,7 @@ def fillHistograms() :
 	fill = 0
 	for ev in itree :
 		if (ev.mass > mumu_mass_range[1]) : continue
-		if(verbose or i_event%10000==0): print( "mumu_mass <", mumu_mass_range[1], "event", i_event, histos )
+		if(verbose or i_event%10000==0): print( "mumu_mass <", mumu_mass_range[1], "event", i_event )
 		i_event+=1
 		fill = fills[ev.runNum]
 		if not fill in histos:
