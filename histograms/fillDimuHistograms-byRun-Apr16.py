@@ -91,9 +91,9 @@ def fillHistograms() :
 				"bb" : ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_bb","mass_mumu_fill"+str(ev.runNum)+"_bb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1]),
 				"eb" : ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_eb","mass_mumu_fill"+str(ev.runNum)+"_eb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
 			}
-		if abs(ev.mu1_eta) < 1.479 and abs(ev.mu2_eta) < 1.479 :
+		if abs(ev.eta1) < 1.479 and abs(ev.eta2) < 1.479 :
 			histos[ev.runNum]["bb"].Fill(ev.mass)
-		elif abs(ev.mu1_eta) > 1.479 and abs(ev.mu2_eta) > 1.479 :
+		elif abs(ev.eta1) > 1.479 and abs(ev.eta2) > 1.479 :
 			histos[ev.runNum]["ee"].Fill(ev.mass)
 		else :
 			histos[ev.runNum]["eb"].Fill(ev.mass)
