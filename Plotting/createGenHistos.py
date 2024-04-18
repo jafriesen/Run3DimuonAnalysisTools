@@ -40,7 +40,7 @@ histos_to_plot = {
 
 vars_to_plot = {
 	"mass_mumu" : {
-		"nbins" : 300,
+		"nbins" : 75,
 		"range" : (0.2, 1.5),
 		"nbins2" : 50,
 		"xlabel" : "m(#mu#mu) [GeV]",
@@ -148,6 +148,25 @@ decays = {
 	},
 }
 
+decays = {
+	1: {
+		"color" : ROOT.kRed,
+		"label" : "#eta#rightarrow#mu#mu",
+	},
+	2: {
+		"color" : ROOT.kGreen,
+		"label" : "#eta#rightarrow#mu#mu#gamma",
+	},
+	5: {
+		"color" : ROOT.kViolet,
+		"label" : "#omega#rightarrow#mu#mu",
+	},
+	7: {
+		"color" : ROOT.kCyan,
+		"label" : "#omega#rightarrow#pi_{0}#mu#mu",
+	},
+}
+
 histos = {}
 for v in vars_to_plot :
 	histos[v] = {}
@@ -225,7 +244,7 @@ for v in vars_to_plot :
 		### Decay plots
 		if h == "gen" or h == "gen_matched" or h == "reco_matched" or h == "efficiency" :
 			c_name = name + "_decays"
-			c = ROOT.TCanvas("c_" + c_name, "c_" + c_name, 1200, 1000)
+			c = ROOT.TCanvas("c_" + c_name, "c_" + c_name, 1200, 1200)
 			c.cd()
 			if h == "efficiency" :
 				histos[v][h]["total"].SetMinimum(0)
@@ -237,14 +256,15 @@ for v in vars_to_plot :
 			c.SetLeftMargin(0.12)
 			c.SetRightMargin(0.08)
 			c.SetBottomMargin(0.17)
-			legend = ROOT.TLegend (0.7, 0.7, .93, .89)
+			legend = ROOT.TLegend (0.68, 0.73, .92, .89)
+			legend.SetMargin(0.5)
 			legend.SetNColumns(2)
 			legend.SetTextSize (0.015)
 			#legend.SetHeader("#bf{Decay}")
-			histos[v][h]["total"].Draw("same HIST")
+			histos[v][h]["total"].Draw("same")
 			legend.AddEntry (histos[v][h]["total"], "Total", "f")
 			for d in decays :
-				histos[v][h]["decay_" + str(d)].Draw("same HIST")
+				histos[v][h]["decay_" + str(d)].Draw("same")
 				legend.AddEntry (histos[v][h]["decay_" + str(d)], decays[d]["label"], "f")
 			legend.SetLineWidth (0)
 			legend.Draw("same")
@@ -254,14 +274,14 @@ for v in vars_to_plot :
 		### Bin plot
 		if h == "delta_over_truth" :
 			c_name = name + "_bins"
-			c = ROOT.TCanvas("c_" + c_name, "c_" + c_name, 1200, 1000)
+			c = ROOT.TCanvas("c_" + c_name, "c_" + c_name, 1200, 1200)
 			c.cd()
 			#if v != "efficiency" : c.SetLogy()
 			c.SetTopMargin(0.1)
 			c.SetLeftMargin(0.12)
 			c.SetRightMargin(0.08)
 			c.SetBottomMargin(0.17)
-			legend = ROOT.TLegend (0.7, 0.67, .92, .89)
+			legend = ROOT.TLegend (0.65, 0.67, .92, .89)
 			legend.SetTextSize (0.015)
 			histos[v][h]["total"].Sumw2()
 			if histos[v][h]["total"].Integral() > 0 : histos[v][h]["total"].Scale(1/histos[v][h]["total"].Integral())

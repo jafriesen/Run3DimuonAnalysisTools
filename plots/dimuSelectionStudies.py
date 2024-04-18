@@ -45,7 +45,7 @@ for ID in muon_IDs :
 		print(histos[ID][i_vtxProb].GetEntries())
 
 
-		#if not vtxProb_bins[i_vtxProb] in [ 0.005, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.3 ] : continue
+		if not vtxProb_bins[i_vtxProb] in [ 0.005, 0.01, 0.025, 0.05, 0.075, 0.1 ] : continue
 		bin_width = 0.0001 * rebinning
 		m_range = [ round(0.51/bin_width)*bin_width, round(0.59/bin_width)*bin_width ]
 
