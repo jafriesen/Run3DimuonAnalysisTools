@@ -111,7 +111,7 @@ def fillHistograms() :
 			histos[ev.runNum][pt_key]["ee"].Fill(ev.mass)
 		else :
 			if "eb" not in histos[ev.runNum][pt_key] : 
-				histos[ev.runNum][pt_key]["bb"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
+				histos[ev.runNum][pt_key]["eb"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
 			histos[ev.runNum][pt_key]["eb"].Fill(ev.mass)
 		#print( ev.mass, ev.runNum, fill, i_event, histos[fill].GetEntries() )
 
