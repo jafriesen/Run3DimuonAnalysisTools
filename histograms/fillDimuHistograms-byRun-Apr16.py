@@ -95,7 +95,7 @@ def fillHistograms() :
 		for ipt in range(len(pt_bins)) :
 			if ipt == len(pt_bins)-1 : print("i_event", i_event, "pt", leading_pt, "too high")
 			elif leading_pt > pt_bins[ipt] and leading_pt < pt_bins[ipt+1] :
-				pt_key = "pt" + str(pt_bins[pt]).replace(".","p") + "to" + str(pt_bins[pt+1]).replace(".","p")
+				pt_key = "pt" + str(pt_bins[ipt]).replace(".","p") + "to" + str(pt_bins[ipt+1]).replace(".","p")
 				break
 
 		if pt_key not in histos[ev.runNum] :
