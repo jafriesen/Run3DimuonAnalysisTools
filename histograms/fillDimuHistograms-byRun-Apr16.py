@@ -117,7 +117,7 @@ def fillHistograms() :
 
 	for run in histos :
 		for pt_key in histos[run] :
-			for s in histos[run][pt_key]
+			for s in histos[run][pt_key] :
 				histo = histos[run][pt_key][s]
 				name = histo.GetName()
 				print( "Saving", name, "to", str(opt.OUTPUT)+str(opt.JOB)+".root", "with", histo.GetEntries(), "entries" )
