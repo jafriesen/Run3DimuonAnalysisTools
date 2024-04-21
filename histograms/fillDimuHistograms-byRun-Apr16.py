@@ -98,22 +98,22 @@ def fillHistograms() :
 				pt_key = "pt" + str(pt_bins[ipt]).replace(".","p") + "to" + str(pt_bins[ipt+1]).replace(".","p")
 				break
 
-		if pt_key not in histos[ev.runNum] :
-			histos[ev.runNum][pt_key] = {}
-
-		if abs(ev.eta1) < 1.479 and abs(ev.eta2) < 1.479 :
-			if "bb" not in histos[ev.runNum][pt_key] : 
-				histos[ev.runNum][pt_key]["bb"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_bb","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_bb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
-			histos[ev.runNum][pt_key]["bb"].Fill(ev.mass)
-		elif abs(ev.eta1) > 1.479 and abs(ev.eta2) > 1.479 :
-			if "ee" not in histos[ev.runNum][pt_key] : 
-				histos[ev.runNum][pt_key]["ee"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_ee","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_ee",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
-			histos[ev.runNum][pt_key]["ee"].Fill(ev.mass)
-		else :
-			if "eb" not in histos[ev.runNum][pt_key] : 
-				histos[ev.runNum][pt_key]["eb"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
-			histos[ev.runNum][pt_key]["eb"].Fill(ev.mass)
-		#print( ev.mass, ev.runNum, fill, i_event, histos[fill].GetEntries() )
+		if not pt_key == -1 :
+			if pt_key not in histos[ev.runNum] :
+				histos[ev.runNum][pt_key] = {}
+			if abs(ev.eta1) < 1.479 and abs(ev.eta2) < 1.479 :
+				if "bb" not in histos[ev.runNum][pt_key] : 
+					histos[ev.runNum][pt_key]["bb"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_bb","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_bb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
+				histos[ev.runNum][pt_key]["bb"].Fill(ev.mass)
+			elif abs(ev.eta1) > 1.479 and abs(ev.eta2) > 1.479 :
+				if "ee" not in histos[ev.runNum][pt_key] : 
+					histos[ev.runNum][pt_key]["ee"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_ee","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_ee",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
+				histos[ev.runNum][pt_key]["ee"].Fill(ev.mass)
+			else :
+				if "eb" not in histos[ev.runNum][pt_key] : 
+					histos[ev.runNum][pt_key]["eb"] = ROOT.TH1F("mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb","mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_eb",mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
+				histos[ev.runNum][pt_key]["eb"].Fill(ev.mass)
+			#print( ev.mass, ev.runNum, fill, i_event, histos[fill].GetEntries() )
 
 	for run in histos :
 		for pt_key in histos[run] :
