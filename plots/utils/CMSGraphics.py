@@ -30,9 +30,9 @@ def makeCMSCanvas(name="canvas",title="canvas",width=1800,height=1200):
     if width == 800: ROOT.gStyle.SetTitleYOffset(1)
     return canvas
 
-def makeLegend(nentries=1, left=0.75, right=0.98, margin=0.2, scale=1):
+def makeLegend(nentries=1, left=0.75, right=0.98, margin=0.2, scale=1, top=0):
     height = nentries*0.06*scale
-    leg = ROOT.TLegend(left,(0.88 - height), right - R, 0.98 - T)
+    leg = ROOT.TLegend(left,(top + 0.88 - height), right - R, top + 0.98 - T)
     leg.SetMargin(margin)
     leg.SetFillColor(ROOT.kWhite)
     leg.SetBorderSize(0)
