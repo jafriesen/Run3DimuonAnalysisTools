@@ -94,10 +94,9 @@ def fillHistograms() :
 
 		pt_key = -1
 		for ipt in range(len(pt_bins)) :
-			if pt > pt_bins[ipt + 1] :
+			if ipt == len(pt_bins) - 1 :
 				pt_key = "ptMin" + str(pt_bins[ipt+1]).replace(".","p")
-				break
-			elif leading_pt > pt_bins[ipt] and leading_pt < pt_bins[ipt+1] :
+			elif pt > pt_bins[ipt] and pt < pt_bins[ipt+1] :
 				pt_key = "pt" + str(pt_bins[ipt]).replace(".","p") + "to" + str(pt_bins[ipt+1]).replace(".","p")
 				break
 
