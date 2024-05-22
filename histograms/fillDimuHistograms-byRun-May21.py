@@ -110,7 +110,7 @@ def fillHistograms() :
 			histo_name = "mass_mumu_run"+str(ev.runNum)+"_"+pt_key+"_"+sec
 
 			if sec not in histos[ev.runNum][pt_key] :
-				print( "	Creating histogram", histo_name, "for event with", "run", ev.runNum, "pt1", ev.pt1, "pt2", ev.pt2, "pt", pt, "mass", ev.mass )
+				#print( "	Creating histogram", histo_name, "for event with", "run", ev.runNum, "pt1", ev.pt1, "pt2", ev.pt2, "pt", pt, "mass", ev.mass )
 				histos[ev.runNum][pt_key][sec] = ROOT.TH1F(histo_name,histo_name,mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
 
 			histos[ev.runNum][pt_key][sec].Fill(ev.mass)
