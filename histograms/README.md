@@ -18,23 +18,18 @@ cmsenv
 `scram unsetenv -sh` may not be necessary but can help when accessing sites with gfal.
 
 #### Run Condor jobs
-`fillMMGHistograms.py` makes histograms of variables using combinations of input photon collections, photon selection criteria, and cuts on events. Make sure your list of ntuples is correct:
+`fillDimuHistograms-binned.py` makes dimuon histograms in bins of pT, eta, and soft muon MVA. These commands submit 2000 jobs running `fillDimuHistograms-binned.py` with the 2022-24 ntuples listed in `muMuGammaTree_ntuples_22_23_24.txt`:
+
 ```
-listDir = "/afs/cern.ch/user/.../CMSSW_12_4_2/src/Run3DimuonAnalysisTools/Plotting/FillHistogram"	
-files = [ "root://cmsxrootd.fnal.gov/"+line for line in open(listDir+"/muMuGammaTree_ntuples.txt")]
+python3 submitFillHistogram.py -o h -e /eos/user/.../histos -t histos -n 2000 -s fillDimuHistograms-binned.py -l muMuGammaTree_ntuples_22_23_24.txt
 ```
-These commands submit 2000 jobs running `fillMMGHistograms.py` on the ntuples listed in `muMuGammaTree_ntuples.txt`:
-```
-mkdir /eos/user/.../histos_etaToMuMuGamma_mass_minDr
-python3 submitFillHistogram.py -o h_misc -e /eos/user/.../histos_etaToMuMuGamma_mass_minDr -t histos_etaToMuMuGamma_mass_minDr -n 2000 -s fillMMGHistograms.py -l muMuGammaTree_ntuples.txt
-```
-`/eos/user/.../histos_etaToMuMuGamma_mass_minDr` is the output directory.
+`/eos/user/.../histos` is the output directory.
 
 Add `-d` to set up a dry run or check that the script works by running a single job locally (out of 5000 here to limit the number of input files):
 ```
-python3 /afs/cern.ch/user/.../CMSSW_12_4_2/src/Run3DimuonAnalysisTools/Plotting/FillHistogram/fillMMGHistograms.py -i None -o h_mass -n 5000 -j 5
+python3 fillDimuHistograms-16Dec2024.py -o h -n 5000 -j 1 -l muMuGammaTree_ntuples_22_23_24.txt
 ```
 Run `hadd` to combine the outputs into one ROOT file:
 ```
-hadd /eos/user/.../histos_etaToMuMuGamma_mass_minDr/output.root /eos/user/.../histos_etaToMuMuGamma_mass_minDr/h_mass*
+hadd /eos/user/.../histos/output.root /eos/user/.../histos/h*
 ```
