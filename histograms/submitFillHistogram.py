@@ -120,6 +120,9 @@ def submitFillHistogram():
   subfile.write(condor_settings)
   subfile.close()
 
+  subprocess.run("voms-proxy-init --voms cms --valid 168:00 -out $HOME/private/.proxy", shell=True)
+  subprocess.run("export X509_USER_PROXY=$HOME/private/.proxy", shell=True)
+
   if (not opt.DRY):
     processCmd('condor_submit %s' % (subfilename))
 
