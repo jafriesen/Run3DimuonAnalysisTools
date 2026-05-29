@@ -57,8 +57,23 @@ def fillHistograms() :
 		int( ( (float(opt.JOB)-1) * len(file_list) ) / njobs_actual ),
 		int( ( (float(opt.JOB)) * len(file_list) ) / njobs_actual )
 	)
-	
-	print( f"	Job {opt.JOB} of {njobs_actual} using files ({file_range[0]}, {file_range[1]}]")
+
+	# ### USE 10% OF THIS JOB'S FILE RANGE FOR TESTING
+	# job_file_indices = list(range(file_range[0], file_range[1]))
+	# if len(job_file_indices) > 0:
+	# 	n_test_files = max(1, int(math.ceil(0.10 * len(job_file_indices))))
+	# 	if n_test_files >= len(job_file_indices):
+	# 		selected_indices = job_file_indices
+	# 	else:
+	# 		step = len(job_file_indices) / float(n_test_files)
+	# 		selected_indices = [job_file_indices[min(int(i * step), len(job_file_indices) - 1)] for i in range(n_test_files)]
+	# else:
+	# 	selected_indices = []
+
+	# print(f"	Job {opt.JOB} of {njobs_actual} has files ({file_range[0]}, {file_range[1]}], using {len(selected_indices)} test files (10%)")
+
+	selected_indices = list(range(file_range[0], file_range[1]))
+	print(f"	Job {opt.JOB} of {njobs_actual} has files ({file_range[0]}, {file_range[1]}], using all {len(selected_indices)} files")
 
 	redirector = "root://cmsxrootd.fnal.gov//"
 	redirector = "root://xrootd.cmsaf.mit.edu:1094//"
@@ -66,7 +81,7 @@ def fillHistograms() :
 
 	itree_name = "tree/tree"
 	itree = ROOT.TChain(itree_name)
-	for i in range(file_range[0], file_range[1]) :
+	for i in selected_indices:
 		print("Getting", itree_name, "from", redirector+file_list[i])
 		itree.Add(redirector+file_list[i])
 		print(itree.GetEntries(), "total entries in TChain")
@@ -110,6 +125,9 @@ def fillHistograms() :
 
 		if not histo_name in histos :
 			histos[histo_name] = ROOT.TH1F(histo_name,histo_name,mumu_mass_bins,mumu_mass_range[0],mumu_mass_range[1])
+
+		#print(sum(ev.hltResult), ev.hltResult)
+
 		histos[histo_name].Fill(ev.mass)
 
 	print("Saving histograms...")
